@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, user-scalable=no" />
+  <title>Classic TV</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="text/javascript" src="$WEBAPIS/webapis/webapis.js"></script>
+</head>
+<body>
+  <!-- Login Screen (10-foot D-pad navigable) -->
+  <main id="login-screen" class="screen">
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="brand-badge">CH 01</span>
+        <h1>Classic TV</h1>
+      </div>
+      <p class="login-subtitle">24/7 Synchronized Broadcast Simulator</p>
+
+      <form id="login-form" autocomplete="off">
+        <label class="field">
+          <span>Jellyfin Server</span>
+          <input id="server-url"
+                 type="url"
+                 value="https://jellyfin.example.com"
+                 placeholder="https://jellyfin.example.com"
+                 tabindex="1"
+                 required />
+        </label>
+        <label class="field">
+          <span>Username</span>
+          <input id="username"
+                 type="text"
+                 placeholder="Username"
+                 tabindex="2"
+                 required />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input id="password"
+                 type="password"
+                 placeholder="Password"
+                 tabindex="3" />
+        </label>
+        <button id="login-btn" type="submit" class="primary-btn" tabindex="4">Tune In</button>
+        <button id="qc-btn" type="button" class="secondary-btn" tabindex="5">Quick Connect</button>
+        <div id="qc-box" class="qc-box hidden">
+          <div class="qc-label">ENTER CODE IN JELLYFIN → QUICK CONNECT</div>
+          <div id="qc-code" class="qc-code">------</div>
+        </div>
+        <p id="login-error" class="error-msg" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Fullscreen TV Stage -->
+  <main id="tv-stage" class="screen hidden">
+    <video id="tv-video" playsinline autoplay></video>
+    <canvas id="crt-static" width="640" height="360" class="hidden"></canvas>
+
+    <!-- Sony Trinitron Phosphor-Green Channel Bug -->
+    <div id="channel-bug" class="hidden" aria-live="polite">
+      <div class="bug-row">
+        <span id="bug-number" class="bug-number">CH 1</span>
+        <span id="bug-name" class="bug-name">TV Guide</span>
+      </div>
+      <div id="bug-title" class="bug-title"></div>
+    </div>
+
+    <!-- Subtle Remote Legend (fades out after idle) -->
+    <div id="osd-hint" class="osd-hint hidden">
+      <span>▲▼ CH</span>
+      <span>◀ GUIDE</span>
+      <span>OK INFO</span>
+      <span>CC SUBS</span>
+      <span>0–9 TUNE</span>
+      <span>RED SIGN OUT</span>
+    </div>
+
+    <!-- Exit Toast -->
+    <div id="exit-toast" class="exit-toast hidden">Press RETURN again to exit Classic TV</div>
+
+    <!-- Channel Guide Drawer -->
+    <aside id="channel-drawer" class="drawer hidden" aria-label="Channel Guide">
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-kicker">CHANNEL GUIDE</div>
+          <h2>Classic TV</h2>
+        </div>
+        <button id="drawer-signout" type="button" class="drawer-signout" tabindex="-1">Sign Out</button>
+      </div>
+      <ul id="drawer-list" class="drawer-list"></ul>
+      <div class="drawer-footer">▲▼ Navigate · OK Tune · ▶/RETURN Close</div>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

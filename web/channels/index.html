@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — Channels</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .search-input {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 0.85rem;
+      min-width: 220px;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--phosphor-border);
+    }
+
+    .channels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 14px;
+    }
+
+    .ch-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    .ch-card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .ch-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ch-title-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .ch-num {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--phosphor);
+      flex-shrink: 0;
+    }
+
+    .ch-name {
+      font-weight: 700;
+      font-size: 1rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ch-badge {
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .ch-now {
+      font-size: 0.9rem;
+      color: var(--text);
+      min-height: 2.4em;
+    }
+
+    .ch-ep {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .ch-progress-track {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .ch-progress-fill {
+      height: 100%;
+      background: var(--phosphor);
+      border-radius: 999px;
+    }
+
+    .ch-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: auto;
+      padding-top: 4px;
+    }
+
+    .ch-next {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    footer {
+      margin-top: 24px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ctv-shell">
+    <header class="ctv-topbar">
+      <div class="ctv-brand-wrap">
+        <a class="ctv-brand" href="/">CLASSIC TV</a>
+        <span id="last-updated" class="ctv-subtitle">Loading…</span>
+      </div>
+      <nav class="ctv-nav" aria-label="Primary">
+        <a class="ctv-nav-link" href="/">Hub</a>
+        <a class="ctv-nav-link" href="/watch/">Watch</a>
+        <a class="ctv-nav-link" href="/guide/">Guide</a>
+        <a class="ctv-nav-link active" href="/channels/">Channels</a>
+        <a class="ctv-nav-link" href="/manage/">Manage</a>
+        <a class="ctv-nav-link" href="/status/">Status</a>
+        <a class="ctv-nav-link" href="/crt/">CRT</a>
+      </nav>
+      <div>
+        <a class="ctv-btn ctv-btn-primary" href="/manage/">Manage Channels</a>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <h1 class="page-title">Channel Lineup</h1>
+        <input id="channel-search" class="search-input" type="search" placeholder="Filter channels or shows…" autocomplete="off">
+      </div>
+      <button id="btn-refresh" type="button" class="ctv-btn">Refresh</button>
+    </div>
+
+    <div id="error-banner" class="ctv-error-banner" style="display:none;" role="alert"></div>
+
+    <section id="channels-grid" class="channels-grid" aria-label="Channels">
+      <p style="color:var(--muted);">Loading channels…</p>
+    </section>
+
+    <footer>
+      <span>Classic TV 4.0 · Channel Lineup</span>
+      <span>Auto-refreshes every 30s</span>
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+
+    const gridEl        = document.getElementById('channels-grid');
+    const searchEl      = document.getElementById('channel-search');
+    const errorEl       = document.getElementById('error-banner');
+    const lastUpdatedEl = document.getElementById('last-updated');
+    const refreshBtn    = document.getElementById('btn-refresh');
+
+    let cachedEntries = [];
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str == null ? '' : String(str);
+      return d.innerHTML;
+    }
+
+    function renderGrid() {
+      const q = (searchEl.value || '').trim().toLowerCase();
+      const filtered = q
+        ? cachedEntries.filter(({ ch, slot }) => {
+            const hay = [
+              ch.Name,
+              ch.Id,
+              slot && slot.Title,
+              slot && slot.EpisodeTitle,
+              slot && slot.NextItem && slot.NextItem.Title
+            ].filter(Boolean).join(' ').toLowerCase();
+            return hay.includes(q);
+          })
+        : cachedEntries;
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = '<p style="color:var(--muted);">No channels match your filter.</p>';
+        return;
+      }
+
+      gridEl.innerHTML = filtered.map(({ ch, slot, num }) => {
+        const offline = !slot || slot.IsOffline;
+        const badge = ch.Id === 'guide' ? 'Guide' : (ch.Mirror ? 'Mirror' : '');
+        const nowTitle = offline
+          ? (ch.Mirror ? 'Mirror Idle' : 'Offline')
+          : (slot.Title || 'On Air');
+        const epTitle = !offline && slot.EpisodeTitle ? `<span class="ch-ep">${esc(slot.EpisodeTitle)}</span>` : '';
+        const pct = (!offline && slot.Duration > 0)
+          ? Math.max(0, Math.min(100, Math.round(((slot.StartOffset || 0) / slot.Duration) * 100)))
+          : 0;
+        const rem = (!offline && slot.Duration > 0)
+          ? `${Math.max(0, Math.round((slot.Duration - (slot.StartOffset || 0)) / 60))}m left`
+          : '';
+        const nextText = slot && slot.NextItem
+          ? `Next: ${slot.NextItem.Title || ''}`
+          : (rem || '24/7 Schedule');
+
+        return `<article class="ch-card">
+          <div class="ch-head">
+            <div class="ch-title-wrap">
+              <span class="ch-num">CH ${esc(num)}</span>
+              <span class="ch-name">${esc(ch.Name)}</span>
+            </div>
+            ${badge ? `<span class="ch-badge">${esc(badge)}</span>` : ''}
+          </div>
+          <div class="ch-now" style="${offline ? 'color:var(--muted);font-style:italic;' : ''}">
+            ${esc(nowTitle)}${epTitle}
+          </div>
+          <div class="ch-progress-track">
+            <div class="ch-progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="ch-foot">
+            <span class="ch-next">${esc(nextText)}${rem && slot && slot.NextItem ? ' · ' + esc(rem) : ''}</span>
+            <a class="ctv-btn ctv-btn-primary" href="/watch/#${encodeURIComponent(ch.Id)}">Watch</a>
+          </div>
+        </article>`;
+      }).join('');
+    }
+
+    async function loadChannels() {
+      errorEl.style.display = 'none';
+      try {
+        const res = await fetch('/ClassicTV/channels', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const channels = (data.Channels || []).slice().sort((a, b) => {
+          const na = a.Number > 0 ? a.Number : 99999;
+          const nb = b.Number > 0 ? b.Number : 99999;
+          return na - nb;
+        });
+
+        const slots = await Promise.all(
+          channels.map((ch) =>
+            fetch('/ClassicTV/channel/' + encodeURIComponent(ch.Id), { cache: 'no-store' })
+              .then((r) => (r.ok ? r.json() : null))
+              .catch(() => null)
+          )
+        );
+
+        cachedEntries = channels.map((ch, idx) => ({
+          ch,
+          slot: slots[idx],
+          num: ch.Number > 0 ? ch.Number : idx + 1
+        }));
+        renderGrid();
+        lastUpdatedEl.textContent = `${channels.length} channels · Updated ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+      } catch (err) {
+        errorEl.textContent = '⚠ Failed to load channels: ' + (err.message || err);
+        errorEl.style.display = 'block';
+      }
+    }
+
+    searchEl.addEventListener('input', renderGrid);
+    refreshBtn.addEventListener('click', loadChannels);
+    loadChannels();
+    setInterval(loadChannels, 30000);
+  </script>
+</body>
+</html>

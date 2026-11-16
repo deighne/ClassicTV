@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="MainScene" extends="Scene">
+  <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+  <children>
+    <!-- Fullscreen Video Player -->
+    <Video
+      id="tvVideo"
+      width="1920"
+      height="1080"
+      enableUI="false"
+      enableTrickPlay="false" />
+
+    <!-- Frame-stepped CRT Static Overlay -->
+    <Poster
+      id="staticPoster"
+      uri="pkg:/images/static_tile.png"
+      width="1920"
+      height="1080"
+      scaleRotateCenter="[960, 540]"
+      opacity="0.9"
+      visible="false" />
+
+    <!-- Sony Trinitron Phosphor-Green OSD Channel Bug (top-right) -->
+    <Group id="channelBug" translation="[1320, 56]" visible="false">
+      <Rectangle width="528" height="148" color="0x041008E0" />
+      <Rectangle width="528" height="2" color="0x46FF7A66" />
+      <Rectangle y="146" width="528" height="2" color="0x46FF7A66" />
+      <Label
+        id="bugNumber"
+        translation="[20, 14]"
+        width="120"
+        height="60"
+        color="0x46FF7AFF"
+        font="font:LargeBoldSystemFont"
+        text="" />
+      <Label
+        id="bugName"
+        translation="[136, 22]"
+        width="372"
+        height="48"
+        color="0x46FF7AFF"
+        font="font:MediumBoldSystemFont"
+        text="" />
+      <Label
+        id="bugTitle"
+        translation="[20, 88]"
+        width="488"
+        height="40"
+        color="0xE4F7E9FF"
+        font="font:SmallSystemFont"
+        text="" />
+    </Group>
+
+    <!-- Channel Drawer (left) -->
+    <Group id="drawerGroup" visible="false">
+      <Rectangle width="540" height="1080" color="0x0C1012EE" />
+      <Rectangle x="538" width="2" height="1080" color="0x46FF7A55" />
+      <Label
+        translation="[36, 40]"
+        width="468"
+        height="48"
+        color="0x46FF7AFF"
+        font="font:MediumBoldSystemFont"
+        text="CHANNELS" />
+      <LabelList
+        id="channelList"
+        translation="[28, 108]"
+        itemSize="[484, 64]"
+        numRows="13"
+        color="0xEEF2F3FF"
+        focusedColor="0x46FF7AFF"
+        focusBitmapUri="pkg:/images/focus_row.png" />
+      <Label
+        translation="[36, 1012]"
+        width="468"
+        height="36"
+        color="0x8B989DFF"
+        font="font:SmallestSystemFont"
+        text="OK: Tune  |  *: Sign Out  |  Back: Close" />
+    </Group>
+
+    <!-- Timers -->
+    <Timer id="staticTickTimer" repeat="true" duration="0.055" />
+    <Timer id="staticHideTimer" repeat="false" duration="0.55" />
+    <Timer id="bugHideTimer" repeat="false" duration="8.0" />
+    <Timer id="digitTimer" repeat="false" duration="1.5" />
+    <Timer id="errorRetryTimer" repeat="false" duration="2.5" />
+    <Timer id="qcPollTimer" repeat="true" duration="2.0" />
+  </children>
+</component>

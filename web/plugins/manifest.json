@@ -1,0 +1,28 @@
+[
+  {
+    "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "ClassicTV",
+    "overview": "Classic TV channel scheduling for Jellyfin.",
+    "description": "Serves what should be playing now on each Classic TV channel, at what offset. Used by the Classic TV Kodi addon to drive scheduled playback via the Jellyfin addon's plugin:// URL scheme.",
+    "owner": "deighne",
+    "category": "General",
+    "versions": [
+      {
+        "version": "12.0.0.13",
+        "changelog": "Jellyfin 12.x release (net10.0).",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/deighne/Jellyfin.Plugin.ClassicTV/releases/download/v12.0.0.13/classictv_12.0.0.13.zip",
+        "checksum": "8283cced77b67ea070690573f277dd4f",
+        "timestamp": "2026-11-15 17:52:00"
+      },
+      {
+        "version": "10.11.0.16",
+        "changelog": "Mirror channels and missing-item pruning for Jellyfin 10.11.x (net9.0).",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/deighne/Jellyfin.Plugin.ClassicTV/releases/download/v10.11.0.16/classictv_10.11.0.16.zip",
+        "checksum": "d4023de8a9fd6ca67504849271fcce90",
+        "timestamp": "2026-11-15 17:52:00"
+      }
+    ]
+  }
+]

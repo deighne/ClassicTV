@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — Manage Channels</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    .manage-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .manage-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .hidden { display: none !important; }
+
+    /* Auth Card (matches Watch player login/Quick Connect) */
+    .login-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 28px 0;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .login-card h2 {
+      font-family: var(--font-mono);
+      color: var(--phosphor);
+      font-size: 1.15rem;
+      letter-spacing: 0.06em;
+    }
+
+    .login-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .login-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .login-field input {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+    }
+
+    .login-field input:focus {
+      outline: none;
+      border-color: var(--phosphor);
+    }
+
+    .login-error {
+      font-size: 0.84rem;
+      color: var(--err);
+      min-height: 1.2em;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin: 2px 0;
+    }
+
+    .login-divider::before,
+    .login-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .qc-box {
+      border: 1px solid var(--phosphor-border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+      background: rgba(70, 255, 122, 0.06);
+      cursor: pointer;
+    }
+
+    .qc-code {
+      font-family: var(--font-mono);
+      font-size: 1.9rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--phosphor);
+    }
+
+    .qc-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ClassicTV configPage button & layout parity */
+    #ClassicTVConfigPage .raised {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #ClassicTVConfigPage .raised:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--border-strong);
+    }
+
+    #ClassicTVConfigPage .raised:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #ClassicTVConfigPage .button-submit {
+      background: var(--phosphor-dim);
+      border-color: var(--phosphor-border);
+      color: var(--phosphor);
+    }
+
+    #ClassicTVConfigPage .button-submit:hover:not(:disabled) {
+      background: rgba(70, 255, 122, 0.24);
+      border-color: var(--phosphor);
+    }
+
+    #ClassicTVConfigPage .button-cancel {
+      background: rgba(255, 107, 107, 0.12);
+      border-color: rgba(255, 107, 107, 0.4);
+      color: var(--err);
+    }
+
+    #ClassicTVConfigPage .button-cancel:hover:not(:disabled) {
+      background: rgba(255, 107, 107, 0.22);
+    }
+
+    .ctv-channel-card {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    .ctv-channel-card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .ctv-channel-card-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .ctv-channel-card-title { font-size: 1.06rem; font-weight: 700; }
+    .ctv-channel-card-number { font-family: var(--font-mono); font-size: 0.88rem; font-weight: 700; color: var(--phosphor); }
+    .ctv-channel-card-blocks { font-size: 0.84rem; color: var(--muted); margin-top: 4px; }
+    .ctv-channel-card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+    .ctv-enabled-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--phosphor-dim);
+      color: var(--phosphor);
+      border: 1px solid var(--phosphor-border);
+    }
+
+    .ctv-enabled-badge.disabled {
+      background: rgba(158, 158, 158, 0.14);
+      color: var(--muted);
+      border-color: rgba(158, 158, 158, 0.3);
+    }
+
+    .ctv-mode-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(33, 150, 243, 0.16);
+      color: #64b5f6;
+      border: 1px solid rgba(33, 150, 243, 0.35);
+    }
+
+    .ctv-now-playing { font-size: 0.82rem; color: var(--muted); margin-top: 5px; }
+    .ctv-now-playing strong { color: var(--phosphor); font-weight: 500; }
+
+    .ctv-save-toast {
+      background: var(--phosphor-dim);
+      border: 1px solid var(--phosphor-border);
+      color: var(--phosphor);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 0.88rem;
+    }
+
+    #ctv-error-banner {
+      background: rgba(255, 107, 107, 0.12);
+      border: 1px solid rgba(255, 107, 107, 0.45);
+      color: var(--err);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 14px;
+    }
+
+    .ctv-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 9, 0.78);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ctv-modal {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      padding: 22px;
+      border-radius: 12px;
+      max-width: 760px;
+      width: 92%;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.72);
+    }
+
+    .ctv-modal h2, .ctv-modal h3 { margin-bottom: 10px; font-size: 1.08rem; }
+    .ctv-form-row { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+    .ctv-form-row label { font-size: 0.84rem; color: var(--muted); }
+    .ctv-form-row input[type="text"],
+    .ctv-form-row input[type="number"],
+    .ctv-form-row select {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 0.92rem;
+      max-width: 360px;
+    }
+    .ctv-form-inline { display: flex; align-items: center; gap: 8px; }
+    .ctv-sep { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+    .ctv-error { color: var(--err); font-size: 0.85rem; }
+    .ctv-warning { color: var(--warn); font-size: 0.85rem; }
+
+    #ctv-block-list { list-style: none; }
+    #ctv-block-list li {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .ctv-block-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; flex-wrap: wrap; }
+    .ctv-block-header-title { flex: 1; font-weight: 600; }
+    .ctv-block-body { padding: 10px 12px; border-top: 1px solid var(--border); }
+    .ctv-block-offline { opacity: 0.55; }
+    .ctv-show-list { list-style: none; margin-top: 8px; }
+    .ctv-show-list li {
+      display: flex; align-items: center; gap: 8px; padding: 6px 0;
+      border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: none; flex-wrap: wrap; font-size: 0.88rem;
+    }
+    .ctv-show-name { flex: 1; min-width: 120px; }
+
+    .ctv-timeline-wrap { margin-bottom: 12px; }
+    .ctv-timeline {
+      position: relative; height: 20px; background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+    }
+    .ctv-timeline-seg {
+      position: absolute; top: 0; bottom: 0; background: rgba(70, 255, 122, 0.4);
+      border-right: 1px solid rgba(0, 0, 0, 0.4); font-size: 0.7rem; line-height: 20px;
+      padding: 0 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff;
+    }
+    .ctv-timeline-seg.offline { background: rgba(158, 158, 158, 0.25); color: var(--muted); }
+    .ctv-timeline-seg.overlap { background: rgba(255, 107, 107, 0.65); }
+    .ctv-timeline-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
+
+    .ctv-bulk-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .ctv-btn-xs { padding: 3px 8px !important; font-size: 0.76rem !important; }
+    .ctv-season-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; align-items: center; }
+    .ctv-season-bar label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.84rem; }
+
+    #ctv-series-search {
+      background: rgba(255, 255, 255, 0.06); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 0.9rem;
+    }
+    #ctv-series-list { list-style: none; max-height: 320px; overflow-y: auto; }
+    #ctv-series-list li {
+      padding: 7px 10px; border-radius: 6px; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 0.88rem;
+    }
+    #ctv-series-list li:hover { background: rgba(255, 255, 255, 0.07); }
+    #ctv-series-list li.selected { background: var(--phosphor-dim); }
+    .ctv-series-ep-count { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+
+    .ctv-confirm-box {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-strong);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;
+    }
+    .ctv-confirm-box-actions { display: flex; gap: 8px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="ctv-shell">
+    <header class="ctv-topbar">
+      <div class="ctv-brand-wrap">
+        <a class="ctv-brand" href="/">CLASSIC TV</a>
+        <span class="ctv-subtitle">Channel Content Manager</span>
+      </div>
+      <nav class="ctv-nav" aria-label="Primary">
+        <a class="ctv-nav-link" href="/">Hub</a>
+        <a class="ctv-nav-link" href="/watch/">Watch</a>
+        <a class="ctv-nav-link" href="/guide/">Guide</a>
+        <a class="ctv-nav-link" href="/channels/">Channels</a>
+        <a class="ctv-nav-link active" href="/manage/">Manage</a>
+        <a class="ctv-nav-link" href="/status/">Status</a>
+        <a class="ctv-nav-link" href="/crt/">CRT</a>
+      </nav>
+      <div>
+        <button id="manage-signout" type="button" class="ctv-btn hidden">Switch Admin</button>
+      </div>
+    </header>
+
+    <!-- Admin Jellyfin Sign-in -->
+    <div id="manage-login" class="login-wrap hidden">
+      <form id="manage-login-form" class="login-card">
+        <h2>ADMIN SIGN-IN</h2>
+        <p class="login-sub">Sign in with a Jellyfin administrator account to edit channels, shows, and ratings.</p>
+        <label class="login-field">
+          Username
+          <input id="manage-user" type="text" autocomplete="username" required>
+        </label>
+        <label class="login-field">
+          Password
+          <input id="manage-pass" type="password" autocomplete="current-password">
+        </label>
+        <div id="manage-login-err" class="login-error"></div>
+        <button type="submit" class="ctv-btn ctv-btn-primary" style="justify-content:center;">Sign In</button>
+        <div class="login-divider">or</div>
+        <button id="manage-qc-btn" type="button" class="ctv-btn" style="justify-content:center;">Sign in with Quick Connect</button>
+        <div id="manage-qc-box" class="qc-box hidden" title="Click to copy Quick Connect code">
+          <div id="manage-qc-code" class="qc-code">------</div>
+          <div id="manage-qc-hint" class="qc-hint">Approve in Jellyfin → Quick Connect (click code to copy)</div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Channel Management Workspace -->
+    <div id="ClassicTVConfigPage" class="hidden">
+      <div class="content-primary">
+        <div class="manage-toolbar">
+          <h1 class="manage-title">Channel Content &amp; Schedule</h1>
+          <button id="ctv-btn-new-channel" class="raised button-submit">+ New Channel</button>
+        </div>
+
+        <div id="ctv-error-banner" style="display:none"></div>
+        <div id="ctv-save-toast" class="ctv-save-toast" style="display:none"></div>
+        <div id="ctv-channel-list"></div>
+      </div>
+
+      <div id="ctv-editor-overlay" class="ctv-modal-overlay" style="display:none">
+        <div class="ctv-modal">
+          <div id="ctv-editor-content"></div>
+        </div>
+      </div>
+
+      <div id="ctv-series-overlay" class="ctv-modal-overlay" style="display:none">
+        <div class="ctv-modal">
+          <div id="ctv-series-content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/config.js"></script>
+  <script type="module">
+    const AUTH_KEY = 'classictv_web_auth';
+    const CLIENT_HEADER = 'MediaBrowser Client="ClassicTV Manage", Device="Browser", DeviceId="classictv-manage-web", Version="4.0"';
+
+    const loginWrap = document.getElementById('manage-login');
+    const loginForm = document.getElementById('manage-login-form');
+    const userInput = document.getElementById('manage-user');
+    const passInput = document.getElementById('manage-pass');
+    const errEl     = document.getElementById('manage-login-err');
+    const qcBtn     = document.getElementById('manage-qc-btn');
+    const qcBox     = document.getElementById('manage-qc-box');
+    const qcCodeEl  = document.getElementById('manage-qc-code');
+    const qcHintEl  = document.getElementById('manage-qc-hint');
+    const signoutBtn = document.getElementById('manage-signout');
+    const pageEl     = document.getElementById('ClassicTVConfigPage');
+
+    let qcTimer = null;
+    let qcSecret = '';
+    let controllerLoaded = false;
+
+    function getJellyfinBase() {
+      const cfg = window.CLASSICTV_CONFIG || {};
+      const lanHosts = cfg.lanHosts || ['localhost', '127.0.0.1'];
+      const h = window.location.hostname;
+      if (lanHosts.includes(h)) {
+        return `http://${h}:8096`;
+      }
+      return (cfg.jellyfinUrl || 'https://jellyfin.example.com').replace(/\/+$/, '');
+    }
+
+    function readAuth() {
+      try {
+        const raw = localStorage.getItem(AUTH_KEY);
+        if (!raw) return null;
+        const p = JSON.parse(raw);
+        return p && p.token ? p : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function saveAuth(auth) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    }
+
+    function stopQc() {
+      if (qcTimer) { clearInterval(qcTimer); qcTimer = null; }
+      qcSecret = '';
+    }
+
+    async function bootManage(auth) {
+      window.ApiClient = {
+        accessToken: () => auth.token
+      };
+
+      // Verify token has admin elevation for /ClassicTV/manage/channels
+      const probe = await fetch('/ClassicTV/manage/channels', {
+        headers: { 'Authorization': 'MediaBrowser Token=' + auth.token }
+      });
+      if (probe.status === 401 || probe.status === 403) {
+        errEl.textContent = 'This Jellyfin user does not have administrator permissions.';
+        showLogin();
+        return;
+      }
+
+      loginWrap.classList.add('hidden');
+      pageEl.classList.remove('hidden');
+      signoutBtn.classList.remove('hidden');
+
+      if (!controllerLoaded) {
+        controllerLoaded = true;
+        const mod = await import('./classictv.js?v=1');
+        if (mod && typeof mod.default === 'function') {
+          mod.default(pageEl, {});
+        }
+      }
+      pageEl.dispatchEvent(new Event('viewshow'));
+    }
+
+    function showLogin() {
+      pageEl.classList.add('hidden');
+      signoutBtn.classList.add('hidden');
+      loginWrap.classList.remove('hidden');
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.textContent = '';
+      const serverUrl = getJellyfinBase();
+      try {
+        const res = await fetch(`${serverUrl}/Users/AuthenticateByName`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': CLIENT_HEADER },
+          body: JSON.stringify({ Username: userInput.value.trim(), Pw: passInput.value })
+        });
+        if (!res.ok) {
+          errEl.textContent = res.status === 401 ? 'Invalid username or password.' : `Sign-in failed (HTTP ${res.status}).`;
+          return;
+        }
+        const data = await res.json();
+        const auth = { serverUrl, token: data.AccessToken, userId: data.User?.Id || '', userName: data.User?.Name || '' };
+        saveAuth(auth);
+        await bootManage(auth);
+      } catch (err) {
+        errEl.textContent = err.message || 'Sign-in failed.';
+      }
+    });
+
+    qcBox.addEventListener('click', async () => {
+      const code = qcCodeEl.textContent.trim();
+      if (!code || code === '------') return;
+      try {
+        await navigator.clipboard.writeText(code);
+        qcHintEl.textContent = 'Copied! Approve in Jellyfin → Quick Connect';
+      } catch (_) {}
+    });
+
+    qcBtn.addEventListener('click', async () => {
+      stopQc();
+      errEl.textContent = '';
+      const serverUrl = getJellyfinBase();
+      qcBtn.disabled = true;
+      try {
+        const res = await fetch(`${serverUrl}/QuickConnect/Initiate`, {
+          method: 'POST',
+          headers: { 'Authorization': CLIENT_HEADER }
+        });
+        if (!res.ok) throw new Error(`Quick Connect unavailable (HTTP ${res.status})`);
+        const data = await res.json();
+        qcSecret = data.Secret;
+        qcCodeEl.textContent = data.Code;
+        qcBox.classList.remove('hidden');
+
+        qcTimer = setInterval(async () => {
+          try {
+            const cRes = await fetch(`${serverUrl}/QuickConnect/Connect?secret=${encodeURIComponent(qcSecret)}`, {
+              headers: { 'Authorization': CLIENT_HEADER }
+            });
+            if (!cRes.ok) return;
+            const cData = await cRes.json();
+            if (!cData.Authenticated) return;
+            const aRes = await fetch(`${serverUrl}/Users/AuthenticateWithQuickConnect`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': CLIENT_HEADER },
+              body: JSON.stringify({ Secret: qcSecret })
+            });
+            if (!aRes.ok) return;
+            const authData = await aRes.json();
+            stopQc();
+            const auth = { serverUrl, token: authData.AccessToken, userId: authData.User?.Id || '', userName: authData.User?.Name || '' };
+            saveAuth(auth);
+            await bootManage(auth);
+          } catch (_) {}
+        }, 2500);
+      } catch (err) {
+        errEl.textContent = err.message || 'Quick Connect failed.';
+      } finally {
+        qcBtn.disabled = false;
+      }
+    });
+
+    signoutBtn.addEventListener('click', () => {
+      stopQc();
+      localStorage.removeItem(AUTH_KEY);
+      window.location.reload();
+    });
+
+    const existing = readAuth();
+    if (existing) {
+      bootManage(existing);
+    } else {
+      showLogin();
+    }
+  </script>
+</body>
+</html>

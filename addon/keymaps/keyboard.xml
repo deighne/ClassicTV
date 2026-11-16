@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Classic TV 3.0 — Kodi keymap
+  File: addon/keymaps/keyboard.xml
+
+  Routes IR button events (received from the Sony RM-Y180 via ir-keytable)
+  and keyboard/remote presses to NotifyAll messages consumed by service.py's
+  xbmc.Monitor subclass (onNotification).
+
+  Why NotifyAll?
+    RunScript spawns a new Python subprocess per button press (~1500ms on the
+    Le Potato's ARM CPU). NotifyAll is in-process and dispatches in <1ms.
+
+  Sender:   classictv.service  (matches addon id in addon.xml)
+  Receiver: service.py onNotification() filters on sender == "classictv.service"
+
+  Requirements: 15.4
+-->
+<keymap>
+  <fullscreenvideo>
+
+    <!-- ================================================================
+         <remote> section — handles IR remote key names reported by Kodi
+         after ir-keytable maps raw scancodes to Linux KEY_* events.
+         ================================================================ -->
+    <remote>
+
+      <!-- Channel navigation -->
+      <channelup>NotifyAll(classictv.service, ch_up)</channelup>
+      <channeldown>NotifyAll(classictv.service, ch_down)</channeldown>
+
+      <!-- Guide / EPG overlay -->
+      <epg>NotifyAll(classictv.service, guide)</epg>
+
+      <!-- Numeric digit entry (0–9) -->
+      <zero>NotifyAll(classictv.service, num_0)</zero>
+      <one>NotifyAll(classictv.service, num_1)</one>
+      <two>NotifyAll(classictv.service, num_2)</two>
+      <three>NotifyAll(classictv.service, num_3)</three>
+      <four>NotifyAll(classictv.service, num_4)</four>
+      <five>NotifyAll(classictv.service, num_5)</five>
+      <six>NotifyAll(classictv.service, num_6)</six>
+      <seven>NotifyAll(classictv.service, num_7)</seven>
+      <eight>NotifyAll(classictv.service, num_8)</eight>
+      <nine>NotifyAll(classictv.service, num_9)</nine>
+
+      <!-- Confirm digit entry / OK -->
+      <select>NotifyAll(classictv.service, confirm)</select>
+
+      <!-- Cancel / close overlay -->
+      <back>NotifyAll(classictv.service, back)</back>
+
+      <!-- D-pad navigation (TV Guide overlay) -->
+      <up>NotifyAll(classictv.service, up)</up>
+      <down>NotifyAll(classictv.service, down)</down>
+      <left>NotifyAll(classictv.service, left)</left>
+      <right>NotifyAll(classictv.service, right)</right>
+
+    </remote>
+
+    <!-- ================================================================
+         <keyboard> section — handles keyboard key codes.
+         Useful for testing in a desktop Kodi instance without a remote.
+         ================================================================ -->
+    <keyboard>
+
+      <!-- Channel navigation -->
+      <key id="KEY_CHANNELUP">NotifyAll(classictv.service, ch_up)</key>
+      <key id="KEY_CHANNELDOWN">NotifyAll(classictv.service, ch_down)</key>
+
+      <!-- Guide / EPG overlay -->
+      <key id="KEY_EPG">NotifyAll(classictv.service, guide)</key>
+
+      <!-- Numeric digit entry (0–9) -->
+      <key id="KEY_NUMERIC_0">NotifyAll(classictv.service, num_0)</key>
+      <key id="KEY_NUMERIC_1">NotifyAll(classictv.service, num_1)</key>
+      <key id="KEY_NUMERIC_2">NotifyAll(classictv.service, num_2)</key>
+      <key id="KEY_NUMERIC_3">NotifyAll(classictv.service, num_3)</key>
+      <key id="KEY_NUMERIC_4">NotifyAll(classictv.service, num_4)</key>
+      <key id="KEY_NUMERIC_5">NotifyAll(classictv.service, num_5)</key>
+      <key id="KEY_NUMERIC_6">NotifyAll(classictv.service, num_6)</key>
+      <key id="KEY_NUMERIC_7">NotifyAll(classictv.service, num_7)</key>
+      <key id="KEY_NUMERIC_8">NotifyAll(classictv.service, num_8)</key>
+      <key id="KEY_NUMERIC_9">NotifyAll(classictv.service, num_9)</key>
+
+      <!-- Confirm digit entry / OK -->
+      <key id="KEY_ENTER">NotifyAll(classictv.service, confirm)</key>
+      <key id="KEY_KPENTER">NotifyAll(classictv.service, confirm)</key>
+
+      <!-- Cancel / close overlay -->
+      <key id="KEY_EXIT">NotifyAll(classictv.service, back)</key>
+      <key id="KEY_BACKSPACE">NotifyAll(classictv.service, back)</key>
+      <key id="KEY_BACK">NotifyAll(classictv.service, back)</key>
+
+      <!-- D-pad navigation (TV Guide overlay) -->
+      <key id="KEY_UP">NotifyAll(classictv.service, up)</key>
+      <key id="KEY_DOWN">NotifyAll(classictv.service, down)</key>
+      <key id="KEY_LEFT">NotifyAll(classictv.service, left)</key>
+      <key id="KEY_RIGHT">NotifyAll(classictv.service, right)</key>
+
+    </keyboard>
+
+  </fullscreenvideo>
+</keymap>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon
+    id="plugin.video.classictv"
+    name="Classic TV"
+    version="4.11.0"
+    provider-name="Deighne">
+
+    <requires>
+        <!-- Kodi 21 (Omega) / CoreELEC 21.x on the Le Potato -->
+        <import addon="xbmc.python" version="3.0.0"/>
+        <!-- Jellyfin addon is used for Browse Mode library sync; Classic TV
+             plays scheduled streams directly via HTTP byte-range + StartOffset. -->
+        <import addon="plugin.video.jellyfin" version="2.0.0" optional="true"/>
+    </requires>
+
+    <!-- Service entry point: started automatically by Kodi at boot -->
+    <extension point="xbmc.service" library="service.py" start="login"/>
+
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">Classic TV — 24/7 themed channels synced to wall-clock time</summary>
+        <description lang="en_GB">
+            Classic TV recreates the experience of watching cable television circa 1990–2010
+            on a real CRT. Themed channels play continuously, synchronized to wall-clock time.
+            Channel schedule is served by the ClassicTV Jellyfin plugin. Playback is delegated
+            to the Jellyfin Kodi addon — Classic TV handles only channel navigation and overlays.
+        </description>
+        <platform>all</platform>
+        <license>MIT</license>
+    </extension>
+
+</addon>

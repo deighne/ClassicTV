@@ -1,0 +1,235 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA000101 /* ClassicTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201 /* ClassicTVApp.swift */; };
+		AA000102 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000202 /* Models.swift */; };
+		AA000103 /* ClassicTVClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000203 /* ClassicTVClient.swift */; };
+		AA000104 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000204 /* PlayerViewModel.swift */; };
+		AA000105 /* CRTStaticView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000205 /* CRTStaticView.swift */; };
+		AA000106 /* ChannelBugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000206 /* ChannelBugView.swift */; };
+		AA000107 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000207 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA000001 /* ClassicTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassicTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000201 /* ClassicTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicTVApp.swift; sourceTree = "<group>"; };
+		AA000202 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AA000203 /* ClassicTVClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicTVClient.swift; sourceTree = "<group>"; };
+		AA000204 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
+		AA000205 /* CRTStaticView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CRTStaticView.swift; sourceTree = "<group>"; };
+		AA000206 /* ChannelBugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBugView.swift; sourceTree = "<group>"; };
+		AA000207 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA000208 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000301 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA000401 = {
+			isa = PBXGroup;
+			children = (
+				AA000402 /* ClassicTV */,
+				AA000403 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA000402 /* ClassicTV */ = {
+			isa = PBXGroup;
+			children = (
+				AA000201 /* ClassicTVApp.swift */,
+				AA000202 /* Models.swift */,
+				AA000203 /* ClassicTVClient.swift */,
+				AA000204 /* PlayerViewModel.swift */,
+				AA000205 /* CRTStaticView.swift */,
+				AA000206 /* ChannelBugView.swift */,
+				AA000207 /* ContentView.swift */,
+				AA000208 /* Info.plist */,
+			);
+			path = ClassicTV;
+			sourceTree = "<group>";
+		};
+		AA000403 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA000001 /* ClassicTV.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000501 /* ClassicTV */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000602 /* Build configuration list for PBXNativeTarget "ClassicTV" */;
+			buildPhases = (
+				AA000302 /* Sources */,
+				AA000301 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClassicTV;
+			productName = ClassicTV;
+			productReference = AA000001 /* ClassicTV.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000701 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+			};
+			buildConfigurationList = AA000601 /* Build configuration list for PBXProject "ClassicTV" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA000401;
+			productRefGroup = AA000403 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000501 /* ClassicTV */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA000302 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000101 /* ClassicTVApp.swift in Sources */,
+				AA000102 /* Models.swift in Sources */,
+				AA000103 /* ClassicTVClient.swift in Sources */,
+				AA000104 /* PlayerViewModel.swift in Sources */,
+				AA000105 /* CRTStaticView.swift in Sources */,
+				AA000106 /* ChannelBugView.swift in Sources */,
+				AA000107 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA000801 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				SDKROOT = appletvos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Debug;
+		};
+		AA000802 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				SDKROOT = appletvos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 5.0;
+				TVOS_DEPLOYMENT_TARGET = 17.0;
+			};
+			name = Release;
+		};
+		AA000803 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClassicTV/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = photos.dane.ClassicTV;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				TARGETED_DEVICE_FAMILY = 3;
+			};
+			name = Debug;
+		};
+		AA000804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClassicTV/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = photos.dane.ClassicTV;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator";
+				TARGETED_DEVICE_FAMILY = 3;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000601 /* Build configuration list for PBXProject "ClassicTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000801 /* Debug */,
+				AA000802 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000602 /* Build configuration list for PBXNativeTarget "ClassicTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000803 /* Debug */,
+				AA000804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA000701 /* Project object */;
+}

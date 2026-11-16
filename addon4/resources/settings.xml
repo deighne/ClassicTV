@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<settings>
+    <category label="Classic TV">
+        <setting id="jellyfin_base_url" type="text"
+                 label="Jellyfin server URL"
+                 default="http://192.168.1.207:8096"/>
+        <setting id="default_channel" type="text"
+                 label="Default channel ID (e.g. sitcoms)"
+                 default=""/>
+        <setting id="last_channel" type="text"
+                 label="Last opened channel ID"
+                 default=""/>
+    </category>
+</settings>

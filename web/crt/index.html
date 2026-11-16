@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — CRT Calibration</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    :root {
+      --accent: #46ff7a;
+      --accent-dim: rgba(70, 255, 122, 0.4);
+      --text-muted: var(--muted);
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .section-header {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .section-header h2 {
+      font-size: 1rem;
+      color: var(--phosphor);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .section-desc {
+      padding: 1rem 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Toggle button */
+    .toggle-btn {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0.35rem 0.9rem;
+      cursor: pointer;
+      border-radius: 2px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+
+    .toggle-btn:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
+    /* View panels */
+    .view {
+      display: none;
+      padding: 1.5rem;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* ── TEST PATTERNS ─────────────────────────────────────── */
+
+    /* Grid crosshatch pattern */
+    .pattern-grid {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-color: #000;
+      background-image:
+        linear-gradient(to right, #333 1px, transparent 1px),
+        linear-gradient(to bottom, #333 1px, transparent 1px),
+        /* bright center lines */
+        linear-gradient(to right, transparent calc(50% - 0.5px), #fff calc(50% - 0.5px), #fff calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), #fff calc(50% - 0.5px), #fff calc(50% + 0.5px), transparent calc(50% + 0.5px));
+      background-size:
+        5% 5%,
+        5% 5%,
+        100% 100%,
+        100% 100%;
+      position: relative;
+      border: 2px solid #555;
+    }
+
+    /* Corner/edge markers on the grid */
+    .pattern-grid::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        /* outer border rectangle */
+        linear-gradient(to right, #fff 2px, transparent 2px),
+        linear-gradient(to left,  #fff 2px, transparent 2px),
+        linear-gradient(to bottom, #fff 2px, transparent 2px),
+        linear-gradient(to top,   #fff 2px, transparent 2px);
+      background-size:
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    }
+
+    /* Dot crosshatch for convergence */
+    .pattern-dots {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-color: #000;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 4% 5.3%;
+      border: 2px solid #555;
+      position: relative;
+    }
+
+    .pattern-dots::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, transparent calc(50% - 0.5px), #f00 calc(50% - 0.5px), #f00 calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+        linear-gradient(to bottom, transparent calc(50% - 0.5px), #0f0 calc(50% - 0.5px), #0f0 calc(50% + 0.5px), transparent calc(50% + 0.5px));
+    }
+
+    /* Thin-line grid for pincushion */
+    .pattern-lines {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background-color: #000;
+      background-image:
+        linear-gradient(to right, #0f0 1px, transparent 1px),
+        linear-gradient(to bottom, #0f0 1px, transparent 1px);
+      background-size: 10% 13.33%;
+      border: 2px solid #555;
+    }
+
+    .pattern-label {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* ── DIAGRAMS ──────────────────────────────────────────── */
+
+    .diagram {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #ccc;
+    }
+
+    .diagram-title {
+      font-size: 0.85rem;
+      color: var(--phosphor);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .diagram pre {
+      background: #0a0a0a;
+      border: 1px solid #2a2a2a;
+      padding: 1rem;
+      overflow-x: auto;
+      border-radius: 2px;
+      color: #adf5c4;
+      line-height: 1.4;
+      font-size: 0.78rem;
+    }
+
+    .diagram-notes {
+      margin-top: 1rem;
+    }
+
+    .diagram-notes h4 {
+      color: var(--phosphor);
+      font-size: 0.8rem;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .diagram-notes ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .diagram-notes li {
+      padding: 0.2rem 0;
+      font-size: 0.82rem;
+      color: #bbb;
+    }
+
+    .diagram-notes li::before {
+      content: "▸ ";
+      color: var(--accent);
+    }
+
+    .location-badge {
+      display: inline-block;
+      background: #1c3a2a;
+      border: 1px solid var(--accent-dim);
+      color: var(--accent);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+      margin-bottom: 0.75rem;
+    }
+
+    .effect-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.75rem;
+    }
+
+    .effect-card {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 2px;
+      padding: 0.75rem;
+    }
+
+    .effect-card .dir {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+    }
+
+    .effect-card .result {
+      font-size: 0.82rem;
+      color: #e0e0e0;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="ctv-shell">
+  <header class="ctv-topbar">
+    <div class="ctv-brand-wrap">
+      <a class="ctv-brand" href="/">CLASSIC TV</a>
+      <span class="ctv-subtitle">Sony KV-34HS510 · CRT Calibration</span>
+    </div>
+    <nav class="ctv-nav" aria-label="Primary">
+      <a class="ctv-nav-link" href="/">Hub</a>
+      <a class="ctv-nav-link" href="/watch/">Watch</a>
+      <a class="ctv-nav-link" href="/guide/">Guide</a>
+      <a class="ctv-nav-link" href="/channels/">Channels</a>
+      <a class="ctv-nav-link" href="/manage/">Manage</a>
+      <a class="ctv-nav-link" href="/status/">Status</a>
+      <a class="ctv-nav-link active" href="/crt/">CRT</a>
+    </nav>
+  </header>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 1: PINCUSHION
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="pincushion">
+  <div class="section-header">
+    <h2>1. Pincushion</h2>
+    <button class="toggle-btn" onclick="toggleView('pincushion')">Show Diagram</button>
+  </div>
+  <div class="section-desc">
+    Pincushion distortion causes the left and right edges of the picture to bow inward (barrel) or outward
+    (pincushion). Use the test pattern to verify that vertical lines run straight from top to bottom across
+    the full screen width.
+  </div>
+
+  <!-- Test Pattern view (default) -->
+  <div class="view active" id="pincushion-pattern">
+    <div class="pattern-lines"></div>
+    <p class="pattern-label">
+      Vertical lines should be perfectly straight and evenly spaced. Bowing indicates pincushion error.
+    </p>
+  </div>
+
+  <!-- Diagram view -->
+  <div class="view" id="pincushion-diagram">
+    <div class="diagram">
+      <div class="diagram-title">Pincushion Control — Physical Location &amp; Effect</div>
+      <div class="location-badge">SERVICE MENU &gt; H PINCUSHION / V PINCUSHION</div>
+
+<pre>
+  CORRECT (no distortion)    PINCUSHION (adjust CW)   BARREL (adjust CCW)
+
+  |  |  |  |  |  |          |  |  |  |  |  |         |  |  |  |  |  |
+  |  |  |  |  |  |          (  (  (  (  (  (         )  )  )  )  )  )
+  |  |  |  |  |  |          (  (  (  (  (  (         )  )  )  )  )  )
+  |  |  |  |  |  |          (  (  (  (  (  (         )  )  )  )  )  )
+  |  |  |  |  |  |          |  |  |  |  |  |         |  |  |  |  |  |
+
+  Vertical lines straight    Edges bow INWARD          Edges bow OUTWARD
+  from top to bottom         (increase H PINC value)   (decrease H PINC value)
+</pre>
+
+      <div class="diagram-notes">
+        <h4>Access</h4>
+        <ul>
+          <li>Power on the set.</li>
+          <li>Press and hold MENU on the front panel for ~5 seconds to enter the service menu.</li>
+          <li>Navigate to <strong>H PINCUSHION</strong> (horizontal edge bow) or <strong>V PINCUSHION</strong> (top/bottom bow).</li>
+          <li>Exit service menu; changes are saved automatically.</li>
+        </ul>
+        <h4>Adjustment Directions</h4>
+        <div class="effect-grid">
+          <div class="effect-card">
+            <div class="dir">Increase (CW / +)</div>
+            <div class="result">Pushes left/right edges outward — corrects inward bow</div>
+          </div>
+          <div class="effect-card">
+            <div class="dir">Decrease (CCW / &minus;)</div>
+            <div class="result">Pulls left/right edges inward — corrects outward bow</div>
+          </div>
+        </div>
+        <h4>Notes</h4>
+        <ul>
+          <li>Allow the set to warm up for at least 20 minutes before calibrating.</li>
+          <li>Horizontal and vertical pincushion interact slightly; adjust H first, then V.</li>
+          <li>Check corner geometry after each adjustment; pincushion correction can introduce corner distortion.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 2: TRAPEZOID
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="trapezoid">
+  <div class="section-header">
+    <h2>2. Trapezoid (Keystone)</h2>
+    <button class="toggle-btn" onclick="toggleView('trapezoid')">Show Diagram</button>
+  </div>
+  <div class="section-desc">
+    Trapezoidal (keystone) distortion causes the image to be wider at one end than the other — the raster
+    looks like a trapezoid instead of a rectangle. Use the test pattern to verify that the top and bottom
+    edges are the same width and that corners are square.
+  </div>
+
+  <!-- Test Pattern view (default) -->
+  <div class="view active" id="trapezoid-pattern">
+    <div class="pattern-grid"></div>
+    <p class="pattern-label">
+      Top and bottom edges should be equal width. The outer white border should form a perfect rectangle.
+      Slanted sides indicate trapezoid error.
+    </p>
+  </div>
+
+  <!-- Diagram view -->
+  <div class="view" id="trapezoid-diagram">
+    <div class="diagram">
+      <div class="diagram-title">Trapezoid (Keystone) Control — Physical Location &amp; Effect</div>
+      <div class="location-badge">SERVICE MENU &gt; H KEYSTONE / TRAPEZOID</div>
+
+<pre>
+  CORRECT (rectangle)        TOP-WIDE (adjust CCW)     BOTTOM-WIDE (adjust CW)
+
+  +--------------------+      +----------------------+   +-----------------+
+  |                    |     /                        \  |                  |
+  |                    |    /                          \ |                  |
+  |                    |   |                            ||                  |
+  +--------------------+    \                          /  \                /
+                              +----------------------+     +--------------+
+
+  Top == Bottom width        Top edge WIDER than bottom   Bottom edge WIDER than top
+  (correct)                  (decrease KEYSTONE value)    (increase KEYSTONE value)
+</pre>
+
+      <div class="diagram-notes">
+        <h4>Access</h4>
+        <ul>
+          <li>Enter service menu (hold MENU ~5 seconds).</li>
+          <li>Navigate to <strong>H KEYSTONE</strong> or <strong>TRAPEZOID</strong> depending on firmware version.</li>
+          <li>Some KV-34HS510 units also expose <strong>V KEYSTONE</strong> for top-to-bottom taper.</li>
+        </ul>
+        <h4>Adjustment Directions</h4>
+        <div class="effect-grid">
+          <div class="effect-card">
+            <div class="dir">Increase (CW / +)</div>
+            <div class="result">Widens the bottom of the image relative to the top</div>
+          </div>
+          <div class="effect-card">
+            <div class="dir">Decrease (CCW / &minus;)</div>
+            <div class="result">Widens the top of the image relative to the bottom</div>
+          </div>
+        </div>
+        <h4>Notes</h4>
+        <ul>
+          <li>Use the outer white border of the grid pattern to judge top/bottom width equality.</li>
+          <li>A slight tilt of the deflection yoke can cause trapezoid error that software cannot fully correct; check yoke alignment if error is severe.</li>
+          <li>Trapezoid and pincushion interact — adjust one, then re-check the other.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION 3: CONVERGENCE
+     ═══════════════════════════════════════════════════════════════ -->
+<section class="section" id="convergence">
+  <div class="section-header">
+    <h2>3. Convergence</h2>
+    <button class="toggle-btn" onclick="toggleView('convergence')">Show Diagram</button>
+  </div>
+  <div class="section-desc">
+    Convergence error means the red, green, and blue electron beams do not land on exactly the same phosphor
+    dot. This produces color fringing on sharp edges (e.g., white text on black shows a colored shadow).
+    Use the dot pattern with the red/green crosshairs to assess center and corner convergence.
+  </div>
+
+  <!-- Test Pattern view (default) -->
+  <div class="view active" id="convergence-pattern">
+    <div class="pattern-dots"></div>
+    <p class="pattern-label">
+      White dots should appear pure white with no colored fringe. Red (vertical) and green (horizontal)
+      crosshairs should overlap to form a single yellow cross at dead center. Color fringing on dots
+      indicates convergence error.
+    </p>
+  </div>
+
+  <!-- Diagram view -->
+  <div class="view" id="convergence-diagram">
+    <div class="diagram">
+      <div class="diagram-title">Convergence Controls — Physical Location &amp; Effect</div>
+      <div class="location-badge">INTERNAL MAGNETS — rear of deflection yoke</div>
+
+<pre>
+  GOOD CONVERGENCE            MISCONVERGENCE EXAMPLES
+
+  Center dot (pure white):    Red fringe RIGHT of edge:    Blue fringe LEFT of edge:
+       .                           .R                           B.
+       . &lt;-- all 3 beams           . &lt;-- red beam              . &lt;-- blue beam
+       .    overlap here           .     shifted right           .    shifted left
+
+  Corner crosshair:
+  ┌─────────────┐
+  │+            │   + = upper-left corner convergence zone
+  │             │       Adjust corner purity magnets (4-pole
+  │      +      │       rings on yoke) to correct corner color
+  │             │       purity without disturbing center.
+  │            +│
+  └─────────────┘
+        ^
+        Center convergence controlled by 4-pole and 6-pole
+        correction rings behind the main deflection yoke.
+</pre>
+
+      <div class="diagram-notes">
+        <h4>Access</h4>
+        <ul>
+          <li><strong>Static (center) convergence:</strong> Adjust the 4-pole magnet rings on the deflection yoke neck. Rotate to shift the red and blue beams relative to green. Small increments — these are sensitive.</li>
+          <li><strong>Dynamic (corner) convergence:</strong> Adjust the 6-pole magnet rings and the corner purity tabs. Correct one corner at a time while monitoring the others.</li>
+          <li>No service menu access is needed for convergence; all adjustments are physical magnets.</li>
+          <li>After adjusting, run the TV for 30 minutes and re-check — magnetic adjustments drift with temperature.</li>
+        </ul>
+        <h4>Adjustment Directions</h4>
+        <div class="effect-grid">
+          <div class="effect-card">
+            <div class="dir">4-pole ring rotation (CW)</div>
+            <div class="result">Shifts red/blue beams diagonally; affects center convergence symmetrically</div>
+          </div>
+          <div class="effect-card">
+            <div class="dir">4-pole ring rotation (CCW)</div>
+            <div class="result">Shifts in opposite diagonal direction; use in combination with a second ring to isolate horizontal or vertical shift</div>
+          </div>
+          <div class="effect-card">
+            <div class="dir">6-pole ring rotation</div>
+            <div class="result">Corrects bow/curve of convergence in corners without affecting center</div>
+          </div>
+          <div class="effect-card">
+            <div class="dir">Purity tabs (flex outward/inward)</div>
+            <div class="result">Adjusts corner color purity independently on each corner</div>
+          </div>
+        </div>
+        <h4>Notes</h4>
+        <ul>
+          <li>Degauss the set first (unplug and replug) — stray magnetic fields cause convergence errors that magnet adjustment cannot fix.</li>
+          <li>Work with the set warmed up (20+ minutes); cold convergence differs from operating convergence.</li>
+          <li>Convergence adjustments affect the magnetic field inside the CRT and can cause purity errors in other areas. Re-check the full screen after each change.</li>
+          <li>A shadow mask CRT (such as the KV-34HS510) can only correct convergence to within ~0.5–1mm; some fringing at screen edges is normal.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Classic TV 4.0 &mdash; Sony KV-34HS510 &mdash; CRT Calibration
+</footer>
+</div>
+
+<script>
+  // State: which view is active per section. Default: 'pattern'.
+  var state = {
+    pincushion: 'pattern',
+    trapezoid:  'pattern',
+    convergence: 'pattern'
+  };
+
+  function toggleView(section) {
+    var current = state[section];
+    var next    = (current === 'pattern') ? 'diagram' : 'pattern';
+
+    // Swap visibility
+    document.getElementById(section + '-' + current).classList.remove('active');
+    document.getElementById(section + '-' + next).classList.add('active');
+
+    // Update button label
+    var btn = document.querySelector('#' + section + ' .toggle-btn');
+    btn.textContent = (next === 'diagram') ? 'Show Test Pattern' : 'Show Diagram';
+
+    state[section] = next;
+  }
+</script>
+</body>
+</html>

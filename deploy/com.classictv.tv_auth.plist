@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classictv.tv_auth</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/dane/projects/ClassicTV3.0/tools/tv_auth.py</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>8898</string>
+        <string>--jellyfin-url</string>
+        <string>http://127.0.0.1:8096</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/dane/projects/ClassicTV3.0</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/dane/Library/Logs/classictv-tv-auth.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/dane/Library/Logs/classictv-tv-auth.log</string>
+</dict>
+</plist>

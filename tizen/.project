@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+  <name>ClassicTV</name>
+  <comment>Classic TV 24/7 Broadcast Simulator for Samsung Tizen TV</comment>
+  <projects></projects>
+  <buildSpec>
+    <buildCommand>
+      <name>org.tizen.web.project.builder.WebBuilder</name>
+      <arguments></arguments>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.tizen.web.project.nature.WebNature</nature>
+    <nature>org.eclipse.wst.jsdt.core.jsNature</nature>
+  </natures>
+</projectDescription>

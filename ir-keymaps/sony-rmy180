@@ -1,0 +1,37 @@
+# table sony-rmy180, type: SONY
+#
+# Sony RM-Y180 IR remote keymap for Classic TV 3.0
+# Protocol: SONY SIRC 15-bit
+# Format: legacy key-value (ir-keytable on Le Potato kernel 4.9 — TOML not supported)
+#
+# Applied via: ir-keytable -p sony -w /storage/.config/rc_keymaps/sony-rmy180
+# Auto-loaded on boot via /storage/.config/rc_maps.cfg:
+#   meson-ir * sony-rmy180
+#
+# Scancodes captured empirically using tools/scan_remote.sh on 2026-09-13
+# on CoreELEC 21.3-Omega / Le Potato (Amlogic S905X), Sony RM-Y180 in
+# sat/cable mode. Full 32-bit Sony scancode format: 0x00b7xxxx
+# (device byte 0xb7, function byte varies).
+#
+# Missing (not on this remote in sat/cable mode): KEY_ENTER, KEY_MENU, KEY_DOT
+# Those may be on a different mode or require a different device code.
+
+0x00b70072 KEY_UP
+0x00b70073 KEY_DOWN
+0x00b70075 KEY_LEFT
+0x00b70074 KEY_RIGHT
+0x00b70076 KEY_OK
+0x00b70010 KEY_CHANNELUP
+0x00b70011 KEY_CHANNELDOWN
+0x00b7006e KEY_EPG
+0x00b70063 KEY_EXIT
+0x00b70009 KEY_NUMERIC_0
+0x00b70000 KEY_NUMERIC_1
+0x00b70001 KEY_NUMERIC_2
+0x00b70002 KEY_NUMERIC_3
+0x00b70003 KEY_NUMERIC_4
+0x00b70004 KEY_NUMERIC_5
+0x00b70005 KEY_NUMERIC_6
+0x00b70006 KEY_NUMERIC_7
+0x00b70007 KEY_NUMERIC_8
+0x00b70008 KEY_NUMERIC_9

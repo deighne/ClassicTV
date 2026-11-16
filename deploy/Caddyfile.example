@@ -1,0 +1,39 @@
+jellyfin.example.com {
+	reverse_proxy localhost:8096
+}
+
+http://tv.example.com {
+	handle /ClassicTV/* {
+		forward_auth localhost:8898 {
+			uri /auth/check-user
+			copy_headers X-ClassicTV-User
+		}
+		reverse_proxy localhost:8096
+	}
+	handle /plugins/* {
+		root * /path/to/ClassicTV/web
+		file_server
+	}
+	handle /auth/* {
+		reverse_proxy localhost:8898
+	}
+	handle /watch* {
+		forward_auth localhost:8898 {
+			uri /auth/check-user?redirect=1
+			copy_headers X-ClassicTV-User
+		}
+		root * /path/to/ClassicTV/web
+		header Cache-Control "no-store"
+		file_server
+	}
+	handle {
+		forward_auth localhost:8898 {
+			uri /auth/check
+			copy_headers X-ClassicTV-User
+		}
+		root * /path/to/ClassicTV/web
+		header /guide/preview.mp4 Cache-Control "no-store"
+		header /watch/* Cache-Control "no-store"
+		file_server
+	}
+}

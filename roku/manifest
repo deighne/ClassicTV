@@ -1,0 +1,9 @@
+title=Classic TV
+major_version=1
+minor_version=0
+build_version=1
+mm_icon_focus_hd=pkg:/images/channel_icon_hd.png
+splash_screen_hd=pkg:/images/splash_hd.png
+splash_color=#050708
+splash_min_time=500
+ui_resolutions=fhd

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sony Trinitron Phosphor-Green CRT Palette (matches ChannelBug.xml) -->
+<colors>
+	<color name="primary_background">FF030B05</color>
+	<color name="secondary_background">4D0A2812</color>
+	<color name="dialog_tint">F2030B05</color>
+	<color name="background">FF000000</color>
+	<color name="bg_image">FF70A07C</color>
+	<color name="bg_overlay">2822FF44</color>
+	<color name="black">FF000000</color>
+	<color name="white">FFFFFFFF</color>
+	<color name="grey">FFA8E6B4</color>
+	<color name="blue">FF55FF77</color>
+	<color name="red">FFFF5533</color>
+	<color name="button_focus">FF18C838</color>
+	<color name="button_alt_focus">9922FF44</color>
+	<color name="text_shadow">80000000</color>
+	<color name="border_alpha">8022FF44</color>
+	<color name="disabled">5588B890</color>
+	<color name="selected">FF22FF44</color>
+	<color name="invalid">FFFF3333</color>
+</colors>

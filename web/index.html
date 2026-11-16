@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — Hub</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-link {
+      font-size: 0.85rem;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: var(--card);
+    }
+
+    .btn-link:hover {
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* Hub Navigation Cards */
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .hub-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .hub-card:hover {
+      background: var(--card-hover);
+      border-color: var(--phosphor);
+      transform: translateY(-1px);
+    }
+
+    .hub-card.primary {
+      border-color: rgba(70, 255, 122, 0.45);
+      background: rgba(12, 26, 18, 0.9);
+    }
+
+    .hub-card-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--phosphor);
+    }
+
+    .hub-card-desc {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* Health Bar */
+    .health-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 14px 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 28px;
+    }
+
+    .health-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .health-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .health-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .health-value.ok { color: var(--ok); }
+    .health-value.err { color: var(--err); }
+    .health-value.warn { color: var(--warn); }
+
+    /* Live Channels Grid */
+    .channel-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .channel-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 14px 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--phosphor);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .channel-card:hover {
+      background: var(--card-hover);
+      border-color: var(--phosphor);
+    }
+
+    .channel-top {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .channel-num {
+      font-family: "Courier New", Courier, monospace;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--phosphor);
+    }
+
+    .channel-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .channel-now {
+      font-size: 0.84rem;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .progress-track {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--phosphor);
+      width: 0%;
+    }
+
+    .channel-rem {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    footer {
+      margin-top: 32px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ctv-shell">
+    <header class="ctv-topbar">
+      <div class="ctv-brand-wrap">
+        <a class="ctv-brand" href="/">CLASSIC TV</a>
+        <span id="last-updated" class="ctv-subtitle">Loading…</span>
+      </div>
+      <nav class="ctv-nav" aria-label="Primary">
+        <a class="ctv-nav-link active" href="/">Hub</a>
+        <a class="ctv-nav-link" href="/watch/">Watch</a>
+        <a class="ctv-nav-link" href="/guide/">Guide</a>
+        <a class="ctv-nav-link" href="/channels/">Channels</a>
+        <a class="ctv-nav-link" href="/manage/">Manage</a>
+        <a class="ctv-nav-link" href="/status/">Status</a>
+        <a class="ctv-nav-link" href="/crt/">CRT</a>
+      </nav>
+      <div class="header-actions">
+        <a id="editor-link" class="ctv-btn" href="https://jellyfin.example.com/web/#/configurationpage?name=ClassicTV" target="_blank" rel="noopener">Jellyfin Plugin ↗</a>
+        <a class="ctv-btn" href="/auth/logout">Sign Out</a>
+      </div>
+    </header>
+
+  <h2 class="section-title">Destinations</h2>
+  <section class="hub-grid" aria-label="Destinations">
+    <a class="hub-card primary" href="/watch/">
+      <span class="hub-card-title">Watch TV</span>
+      <span class="hub-card-desc">Browser TV player with CRT static, Trinitron OSD, and channel surfing.</span>
+    </a>
+    <a class="hub-card" href="/guide/">
+      <span class="hub-card-title">TV Guide</span>
+      <span class="hub-card-desc">Pre-rendered 15-minute Prevue-style scrolling listings (Channel 1).</span>
+    </a>
+    <a class="hub-card" href="/status/">
+      <span class="hub-card-title">System Status</span>
+      <span class="hub-card-desc">Sweet Potato &amp; jfmac health, playback telemetry, and crash autopsies.</span>
+    </a>
+    <a class="hub-card" href="/manage/">
+      <span class="hub-card-title">Channel Manager</span>
+      <span class="hub-card-desc">Edit channels, blocks, TV series, movies, and ratings.</span>
+    </a>
+    <a class="hub-card" href="/channels/">
+      <span class="hub-card-title">Channel Lineup</span>
+      <span class="hub-card-desc">Browse all channels, live progress, and jump straight into any stream.</span>
+    </a>
+    <a class="hub-card" href="/crt/">
+      <span class="hub-card-title">CRT Calibration</span>
+      <span class="hub-card-desc">Sony KV-34HS510 geometry, overscan, and color test patterns.</span>
+    </a>
+  </section>
+
+  <h2 class="section-title">Live Health</h2>
+  <section class="health-bar" aria-label="Service Health">
+    <div class="health-item">
+      <span class="health-label">Jellyfin Plugin</span>
+      <span id="health-plugin" class="health-value warn">Checking…</span>
+    </div>
+    <div class="health-item">
+      <span class="health-label">Sweet Potato</span>
+      <span id="health-sp" class="health-value warn">Checking…</span>
+    </div>
+    <div class="health-item">
+      <span class="health-label">Playing on CRT</span>
+      <span id="health-playing" class="health-value">—</span>
+    </div>
+  </section>
+
+  <h2 class="section-title">Now Playing — Click Any Channel to Watch</h2>
+  <section id="channel-grid" class="channel-grid" aria-label="Now Playing">
+    <p class="meta">Loading channels…</p>
+  </section>
+
+  <footer>
+    <span>Classic TV 4.0</span>
+    <span>Auto-refreshes every 30s</span>
+  </footer>
+  </div>
+
+  <script src="/config.js"></script>
+  <script>
+    'use strict';
+    const ctvCfg = window.CLASSICTV_CONFIG || {};
+
+    const lastUpdatedEl = document.getElementById('last-updated');
+    const pluginEl = document.getElementById('health-plugin');
+    const spEl = document.getElementById('health-sp');
+    const playingEl = document.getElementById('health-playing');
+    const gridEl = document.getElementById('channel-grid');
+
+    const lanHosts = ctvCfg.lanHosts || ['localhost', '127.0.0.1'];
+    const editorEl = document.getElementById('editor-link');
+    if (lanHosts.includes(window.location.hostname)) {
+      editorEl.href = `http://${window.location.hostname}:8096/web/#/configurationpage?name=ClassicTV`;
+    } else if (ctvCfg.jellyfinUrl) {
+      editorEl.href = `${ctvCfg.jellyfinUrl.replace(/\/+$/, '')}/web/#/configurationpage?name=ClassicTV`;
+    }
+
+    function fmtRemaining(offset, duration) {
+      if (!duration || duration <= 0) return '';
+      const rem = Math.max(0, Math.round((duration - (offset || 0)) / 60));
+      return `${rem}m left`;
+    }
+
+    async function refreshHub() {
+      const [channelsRes, statusRes] = await Promise.allSettled([
+        fetch('/ClassicTV/channels').then((r) => (r.ok ? r.json() : Promise.reject(r.status))),
+        fetch('/status.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject(r.status))),
+      ]);
+
+      if (channelsRes.status === 'fulfilled') {
+        const list = (channelsRes.value.Channels || []).slice().sort((a, b) => {
+          const na = a.Number > 0 ? a.Number : 9999;
+          const nb = b.Number > 0 ? b.Number : 9999;
+          return na - nb;
+        });
+        pluginEl.textContent = `Online (${list.length} channels)`;
+        pluginEl.className = 'health-value ok';
+
+        const slots = await Promise.allSettled(
+          list.map((ch) =>
+            fetch(`/ClassicTV/channel/${encodeURIComponent(ch.Id)}`).then((r) => (r.ok ? r.json() : null))
+          )
+        );
+
+        gridEl.innerHTML = '';
+        list.forEach((ch, idx) => {
+          const num = ch.Number > 0 ? ch.Number : idx + 1;
+          const slot = slots[idx].status === 'fulfilled' ? slots[idx].value : null;
+          const card = document.createElement('a');
+          card.className = 'channel-card';
+          card.href = `/watch/?channel=${encodeURIComponent(ch.Id)}`;
+
+          const top = document.createElement('div');
+          top.className = 'channel-top';
+          const numEl = document.createElement('span');
+          numEl.className = 'channel-num';
+          numEl.textContent = String(num);
+          const nameEl = document.createElement('span');
+          nameEl.className = 'channel-name';
+          nameEl.textContent = ch.Name;
+          top.appendChild(numEl);
+          top.appendChild(nameEl);
+          card.appendChild(top);
+
+          const nowEl = document.createElement('div');
+          nowEl.className = 'channel-now';
+          if (slot) {
+            nowEl.textContent = slot.EpisodeTitle && slot.EpisodeTitle !== slot.Title
+              ? `${slot.Title} — ${slot.EpisodeTitle}`
+              : (slot.Title || 'On Air');
+          } else {
+            nowEl.textContent = 'Offline';
+          }
+          card.appendChild(nowEl);
+
+          if (slot && slot.Duration > 0) {
+            const pct = Math.min(100, Math.max(0, ((slot.StartOffset || 0) / slot.Duration) * 100));
+            const track = document.createElement('div');
+            track.className = 'progress-track';
+            const fill = document.createElement('div');
+            fill.className = 'progress-fill';
+            fill.style.width = `${pct.toFixed(1)}%`;
+            track.appendChild(fill);
+            card.appendChild(track);
+
+            const remEl = document.createElement('div');
+            remEl.className = 'channel-rem';
+            remEl.textContent = fmtRemaining(slot.StartOffset, slot.Duration);
+            card.appendChild(remEl);
+          }
+
+          gridEl.appendChild(card);
+        });
+      } else {
+        pluginEl.textContent = 'Offline';
+        pluginEl.className = 'health-value err';
+      }
+
+      if (statusRes.status === 'fulfilled') {
+        const st = statusRes.value || {};
+        const sp = st.sweet_potato || st.kodi || {};
+        const online = sp.online !== false && (st.kodi_online === true || sp.online === true || !!st.active_channel);
+        spEl.textContent = online ? 'Online' : 'Offline';
+        spEl.className = `health-value ${online ? 'ok' : 'err'}`;
+        const chName = st.active_channel_name || (sp.channel && sp.channel.name) || st.active_channel || '';
+        const title = st.now_playing || sp.title || '';
+        playingEl.textContent = chName ? (title ? `${chName} — ${title}` : chName) : 'Idle';
+      } else {
+        spEl.textContent = 'Unknown';
+        spEl.className = 'health-value warn';
+      }
+
+      lastUpdatedEl.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    refreshHub();
+    setInterval(refreshHub, 30000);
+  </script>
+</body>
+</html>

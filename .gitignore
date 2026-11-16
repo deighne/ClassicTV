@@ -1,0 +1,16 @@
+CoreELEC-Amlogic-ng.arm-21.3-Omega-LePotato.img.gz
+.DS_Store
+__pycache__/
+*.pyc
+*.log
+.env
+web/status.json
+web/incidents.json
+web/config.js
+web/plugins/*.zip
+channels/channels-v4.json
+dist/
+ios/ClassicTV.xcodeproj/project.xcworkspace/
+ios/ClassicTV.xcodeproj/xcuserdata/
+.coverage
+.kiro/

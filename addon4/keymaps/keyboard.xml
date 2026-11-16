@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Classic TV 4.0 — Kodi keymap
+
+  Routes IR button events from the Sony RM-Y180 (via ir-keytable → eventlircd
+  → Kodi Lircmap.xml) to NotifyAll messages dispatched to service.py's
+  ClassicTVMonitor.onNotification().
+
+  Button name translation:
+    KEY_CHANNELUP   → eventlircd → Lircmap.xml → <pageplus>   (in <remote>)
+    KEY_CHANNELDOWN → eventlircd → Lircmap.xml → <pageminus>  (in <remote>)
+    KEY_EPG         → eventlircd → Lircmap.xml → <guide>      (in <remote>)
+
+  Scope:
+    <global>         — EPG/guide toggle fires from ANY window (browse, home,
+                       fullscreen video). Without this the user cannot return
+                       to Classic TV mode from the browse UI.
+    <FullscreenVideo> — ch+/ch-, digits, OK, back. These are scoped to
+                       fullscreen video only so they do not interfere with
+                       normal Kodi navigation while browsing.
+
+  Deployed to: special://userdata/keymaps/classictv.xml
+  (NOT inside the addon directory — plugin.video.* addons do not have their
+   keymaps auto-loaded; only script.* service addons do.)
+-->
+<keymap>
+
+  <!-- ================================================================
+       GLOBAL — fires from any window, any context.
+       Only the mode-toggle (EPG/guide) belongs here.
+       ================================================================ -->
+  <global>
+    <remote>
+      <guide>NotifyAll(classictv.service, guide)</guide>
+    </remote>
+  </global>
+
+  <!-- ================================================================
+       FULLSCREEN VIDEO — channel navigation and digit entry.
+       Scoped so these do not interfere with Kodi library browsing.
+       ================================================================ -->
+  <FullscreenVideo>
+    <remote>
+      <!-- Mode toggle. The system remote.xml maps <guide> to
+           ActivateWindow(TVGuide) inside FullscreenVideo, which wins over the
+           <global> mapping above and errors when no PVR add-on is enabled.
+           Repeating it per-window overrides that default. -->
+      <guide>NotifyAll(classictv.service, guide)</guide>
+
+      <!-- Channel navigation via eventlircd → Lircmap.xml translation -->
+      <pageplus>NotifyAll(classictv.service, ch_up)</pageplus>
+      <pageminus>NotifyAll(classictv.service, ch_down)</pageminus>
+
+      <!-- Numeric digit entry (0–9) -->
+      <zero>NotifyAll(classictv.service, num_0)</zero>
+      <one>NotifyAll(classictv.service, num_1)</one>
+      <two>NotifyAll(classictv.service, num_2)</two>
+      <three>NotifyAll(classictv.service, num_3)</three>
+      <four>NotifyAll(classictv.service, num_4)</four>
+      <five>NotifyAll(classictv.service, num_5)</five>
+      <six>NotifyAll(classictv.service, num_6)</six>
+      <seven>NotifyAll(classictv.service, num_7)</seven>
+      <eight>NotifyAll(classictv.service, num_8)</eight>
+      <nine>NotifyAll(classictv.service, num_9)</nine>
+
+      <!-- Confirm / cancel digit entry -->
+      <select>NotifyAll(classictv.service, confirm)</select>
+      <!-- back: routes to channel_entry during digit accumulation,
+           passes through to Kodi's native Back action otherwise -->
+      <back>NotifyAll(classictv.service, back)</back>
+
+      <!-- D-pad (reserved for guide navigation in Tier 2) -->
+      <up>NotifyAll(classictv.service, up)</up>
+      <down>NotifyAll(classictv.service, down)</down>
+      <left>NotifyAll(classictv.service, left)</left>
+      <right>NotifyAll(classictv.service, right)</right>
+    </remote>
+
+    <!-- Keyboard fallbacks for desktop Kodi testing -->
+    <keyboard>
+      <pageup>NotifyAll(classictv.service, ch_up)</pageup>
+      <pagedown>NotifyAll(classictv.service, ch_down)</pagedown>
+      <key id="KEY_NUMERIC_0">NotifyAll(classictv.service, num_0)</key>
+      <key id="KEY_NUMERIC_1">NotifyAll(classictv.service, num_1)</key>
+      <key id="KEY_NUMERIC_2">NotifyAll(classictv.service, num_2)</key>
+      <key id="KEY_NUMERIC_3">NotifyAll(classictv.service, num_3)</key>
+      <key id="KEY_NUMERIC_4">NotifyAll(classictv.service, num_4)</key>
+      <key id="KEY_NUMERIC_5">NotifyAll(classictv.service, num_5)</key>
+      <key id="KEY_NUMERIC_6">NotifyAll(classictv.service, num_6)</key>
+      <key id="KEY_NUMERIC_7">NotifyAll(classictv.service, num_7)</key>
+      <key id="KEY_NUMERIC_8">NotifyAll(classictv.service, num_8)</key>
+      <key id="KEY_NUMERIC_9">NotifyAll(classictv.service, num_9)</key>
+      <key id="KEY_ENTER">NotifyAll(classictv.service, confirm)</key>
+      <!-- KEY_EXIT / KEY_BACKSPACE intentionally not mapped — pass through to Kodi -->
+    </keyboard>
+  </FullscreenVideo>
+
+</keymap>

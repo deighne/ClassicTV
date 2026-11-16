@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — System Status & Crash Autopsy</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-meta {
+      font-size: 0.8rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .refresh-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #10b981;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* System Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #121316;
+      border: 1px solid #1f242d;
+      border-radius: 8px;
+      padding: 18px 20px;
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .status-pill.online {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pill.playing {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pill.browse {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-pill.offline, .status-pill.stopped {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #1a1e26;
+      font-size: 0.85rem;
+    }
+
+    .metric-row:last-child {
+      border-bottom: none;
+    }
+
+    .metric-label {
+      color: #6b7280;
+    }
+
+    .metric-value {
+      color: #e5e7eb;
+      font-weight: 500;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    /* Player Card specifics */
+    .now-playing-box {
+      margin-top: 10px;
+      padding: 12px;
+      background: #181b22;
+      border-radius: 6px;
+      border-left: 3px solid #3b82f6;
+    }
+
+    .now-playing-channel {
+      font-size: 0.8rem;
+      color: #93c5fd;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .now-playing-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #282e3d;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #3b82f6;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-family: monospace;
+    }
+
+    /* Incidents Section */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 32px 0 16px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .incident-card {
+      background: #14161c;
+      border: 1px solid #282d3b;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .incident-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      background: #181b23;
+      border-bottom: 1px solid #282d3b;
+    }
+
+    .incident-badge-crit {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .incident-badge-ok {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .incident-title-block h3 {
+      font-size: 1rem;
+      color: #f3f4f6;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .incident-time {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-family: monospace;
+    }
+
+    .incident-body {
+      padding: 20px;
+    }
+
+    .autopsy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .autopsy-box {
+      background: #0f1115;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid #1e232e;
+    }
+
+    .autopsy-box h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .autopsy-warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 3px solid #f59e0b;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      color: #fbbf24;
+    }
+
+    .autopsy-warning:last-child {
+      margin-bottom: 0;
+    }
+
+    .log-box {
+      background: #090a0d;
+      border: 1px solid #1a1e27;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: #d1d5db;
+      line-height: 1.6;
+      overflow-x: auto;
+    }
+
+    .resolution-banner {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(16, 185, 129, 0.08);
+      border-left: 3px solid #10b981;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      color: #6ee7b7;
+    }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid #1f242d;
+      font-size: 0.8rem;
+      color: #6b7280;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    footer a {
+      color: #9ca3af;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="ctv-topbar">
+      <div class="ctv-brand-wrap">
+        <a class="ctv-brand" href="/">CLASSIC TV</a>
+        <span class="ctv-subtitle">System Health &amp; Autopsy</span>
+      </div>
+      <nav class="ctv-nav" aria-label="Primary">
+        <a class="ctv-nav-link" href="/">Hub</a>
+        <a class="ctv-nav-link" href="/watch/">Watch</a>
+        <a class="ctv-nav-link" href="/guide/">Guide</a>
+        <a class="ctv-nav-link" href="/channels/">Channels</a>
+        <a class="ctv-nav-link" href="/manage/">Manage</a>
+        <a class="ctv-nav-link active" href="/status/">Status</a>
+        <a class="ctv-nav-link" href="/crt/">CRT</a>
+      </nav>
+      <div class="header-meta">
+        <span class="refresh-badge"><span class="pulse-dot"></span> Live</span>
+        <span id="last-updated">Checking...</span>
+      </div>
+    </header>
+
+    <!-- System Alert Banner -->
+    <div id="system-alert-banner" style="display: none; margin-bottom: 20px; padding: 14px 18px; border-radius: 8px; font-weight: 500; font-size: 0.9rem; align-items: center; justify-content: space-between; gap: 12px;"></div>
+
+    <!-- Top Status Cards -->
+    <div class="grid">
+      <!-- Sweet Potato SBC -->
+      <div class="card" id="card-sweet-potato">
+        <div class="card-header">
+          <span class="card-title">Sweet Potato (CRT Client)</span>
+          <span class="status-pill offline" id="sp-status-pill">● Offline</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Network Host</span>
+          <span class="metric-value" id="sp-host">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Ping Latency</span>
+          <span class="metric-value" id="sp-ping">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">System Uptime</span>
+          <span class="metric-value" id="sp-uptime">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Kodi Build</span>
+          <span class="metric-value" id="sp-kodi-version">—</span>
+        </div>
+      </div>
+
+      <!-- Player State -->
+      <div class="card" id="card-player">
+        <div class="card-header">
+          <span class="card-title">Kodi Player & Stream</span>
+          <span class="status-pill offline" id="player-status-pill">● Offline</span>
+        </div>
+        <div class="now-playing-box" id="now-playing-box">
+          <div class="now-playing-channel" id="now-playing-channel">No Channel Active</div>
+          <div class="now-playing-title" id="now-playing-title">Playback Stopped</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div class="time-row">
+            <span id="time-elapsed">00:00</span>
+            <span id="time-remaining">00:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Jellyfin Server -->
+      <div class="card" id="card-jellyfin">
+        <div class="card-header">
+          <span class="card-title">Jellyfin Server (jfmac)</span>
+          <span class="status-pill offline" id="jf-status-pill">● Offline</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Jellyfin Server</span>
+          <span class="metric-value" id="jf-version">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">ClassicTV Plugin</span>
+          <span class="metric-value" id="jf-plugin">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Active Channels</span>
+          <span class="metric-value" id="jf-channels">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Schedule Port</span>
+          <span class="metric-value">:8096 /ClassicTV/</span>
+        </div>
+      </div>
+
+      <!-- Remediation Queue -->
+      <div class="card" id="card-queue">
+        <div class="card-header">
+          <span class="card-title">Hardware Crash Remediation</span>
+          <span class="status-pill online" id="queue-status-pill">● Active</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Queue Progress</span>
+          <span class="metric-value" id="queue-progress">0 / 0</span>
+        </div>
+        <div class="progress-bar" style="margin: 8px 0;">
+          <div class="progress-fill" id="queue-progress-fill" style="width: 0%; background: #3b82f6;"></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Currently Encoding</span>
+          <span class="metric-value" id="queue-current" style="color: #60a5fa; font-weight: 600;">Idle</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Next Priority Hazard</span>
+          <span class="metric-value" id="queue-next" style="color: #f59e0b;">Scanning...</span>
+        </div>
+      </div>
+
+      <!-- TV Guide Channel 1 (Pre-Renderer) -->
+      <div class="card" id="card-guide">
+        <div class="card-header">
+          <span class="card-title">TV Guide Channel 1 (Pre-Renderer)</span>
+          <span class="status-pill browse" id="guide-status-pill">● Standby</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Active 15m Slot</span>
+          <span class="metric-value" id="guide-current-slot">—</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Forward Buffer</span>
+          <span class="metric-value" id="guide-buffer">0.0h (0 / 16 chunks)</span>
+        </div>
+        <div class="progress-bar" style="margin: 8px 0;">
+          <div class="progress-fill" id="guide-buffer-fill" style="width: 0%; background: #10b981;"></div>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Cache Footprint</span>
+          <span class="metric-value" id="guide-disk">0.0 MB</span>
+        </div>
+        <div class="metric-row">
+          <span class="metric-label">Quick Links</span>
+          <span class="metric-value">
+            <a href="/guide/" style="color: #60a5fa; text-decoration: none;">Web Guide</a> &bull;
+            <a href="/guide/preview.mp4" target="_blank" style="color: #fbbf24; text-decoration: none;">Video Preview</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incident Autopsy Section -->
+    <div class="section-header">
+      <h2 class="section-title">
+        <span>Crash Diagnostics & Post-Mortem Autopsies</span>
+      </h2>
+      <span style="font-size: 0.8rem; color: #6b7280;" id="incidents-count">Loading incidents...</span>
+    </div>
+
+    <div id="incidents-container">
+      <div style="color: #6b7280; font-size: 0.85rem; padding: 20px 0;">Loading incident logs...</div>
+    </div>
+
+    <footer>
+      <div>Classic TV 4.0 &bull; Le Potato Amlogic S905X + Sony CRT</div>
+      <div>
+        <a href="/">Dashboard</a> &bull;
+        <a href="/guide/">TV Guide</a> &bull;
+        <a id="footer-jf-link" href="/manage/" target="_blank" rel="noopener">Jellyfin</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(String(str)));
+      return div.innerHTML;
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/status.json?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        renderStatus(data);
+      } catch (err) {
+        console.error('Failed to load status.json:', err);
+      }
+    }
+
+    async function fetchIncidents() {
+      try {
+        const res = await fetch('/incidents.json?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const incidents = await res.json();
+        renderIncidents(incidents);
+      } catch (err) {
+        console.error('Failed to load incidents.json:', err);
+      }
+    }
+
+    function renderStatus(data) {
+      const sp = data.sweet_potato || {};
+      const jf = data.jellyfin || {};
+
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date(data.timestamp).toLocaleTimeString();
+
+      // System Alert Banner
+      const alertBanner = document.getElementById('system-alert-banner');
+      const alert = sp.alert;
+      if (alert) {
+        alertBanner.style.display = 'flex';
+        if (alert.level === 'critical') {
+          alertBanner.style.background = 'rgba(239, 68, 68, 0.15)';
+          alertBanner.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+          alertBanner.style.color = '#f87171';
+        } else {
+          alertBanner.style.background = 'rgba(245, 158, 11, 0.15)';
+          alertBanner.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+          alertBanner.style.color = '#fbbf24';
+        }
+        alertBanner.innerHTML = `<div><strong>⚠ ${escapeHtml(alert.title)}:</strong> ${escapeHtml(alert.message)}</div><div style="font-size:0.75rem; opacity:0.8; font-family:monospace;">${new Date(alert.timestamp).toLocaleTimeString()}</div>`;
+      } else {
+        alertBanner.style.display = 'none';
+      }
+
+      // Sweet Potato
+      const spPill = document.getElementById('sp-status-pill');
+      if (sp.online) {
+        if (alert && alert.type === 'REBOOT_DETECTED') {
+          spPill.className = 'status-pill';
+          spPill.style.background = 'rgba(245, 158, 11, 0.2)';
+          spPill.style.color = '#fbbf24';
+          spPill.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+          spPill.textContent = '⚠ Rebooted';
+        } else {
+          spPill.className = 'status-pill online';
+          spPill.style = '';
+          spPill.textContent = '● Online';
+        }
+      } else {
+        spPill.className = 'status-pill offline';
+        spPill.style = '';
+        if (alert && alert.gap_seconds) {
+          const mins = Math.max(1, Math.round(alert.gap_seconds / 60));
+          spPill.textContent = `● Offline (${mins}m)`;
+        } else {
+          spPill.textContent = '● Offline';
+        }
+      }
+
+      document.getElementById('sp-host').textContent = sp.host || (window.CLASSICTV_CONFIG && window.CLASSICTV_CONFIG.deviceHost) || '—';
+      document.getElementById('sp-ping').textContent = sp.ping_ms ? sp.ping_ms.toFixed(1) + ' ms' : 'Unreachable';
+      document.getElementById('sp-uptime').textContent = sp.uptime || 'N/A';
+      document.getElementById('sp-kodi-version').textContent = sp.kodi_version || 'N/A';
+
+      // Player State
+      const playerPill = document.getElementById('player-status-pill');
+      const state = (sp.player_state || 'offline').toLowerCase();
+      playerPill.className = 'status-pill ' + (state === 'playing' ? 'playing' : (state === 'browse_mode' ? 'browse' : 'stopped'));
+      playerPill.textContent = '● ' + state.replace('_', ' ').toUpperCase();
+
+      const item = sp.playing_item;
+      if (item) {
+        const ch = (sp.channel_number ? 'CH ' + sp.channel_number : '') + (sp.channel_name ? ' — ' + sp.channel_name : '');
+        document.getElementById('now-playing-channel').textContent = ch || 'TV Broadcast';
+        const titleStr = (item.show ? item.show + ' — ' : '') + item.title;
+        document.getElementById('now-playing-title').textContent = titleStr;
+        document.getElementById('time-elapsed').textContent = item.time || '00:00';
+        document.getElementById('time-remaining').textContent = item.duration || '00:00';
+        document.getElementById('progress-fill').style.width = (item.percentage || 0) + '%';
+      } else {
+        document.getElementById('now-playing-channel').textContent = sp.current_window || 'Idle';
+        document.getElementById('now-playing-title').textContent = state === 'browse_mode' ? 'Browsing Library' : 'No Media Playing';
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('time-elapsed').textContent = '00:00';
+        document.getElementById('time-remaining').textContent = '00:00';
+      }
+
+      // Jellyfin
+      const jfPill = document.getElementById('jf-status-pill');
+      if (jf.online) {
+        jfPill.className = 'status-pill online';
+        jfPill.textContent = '● Online';
+      } else {
+        jfPill.className = 'status-pill offline';
+        jfPill.textContent = '● Offline';
+      }
+      document.getElementById('jf-version').textContent = jf.version ? 'v' + jf.version : 'Offline';
+      document.getElementById('jf-plugin').textContent = jf.classictv_plugin_online ? 'Active' : 'Offline';
+      document.getElementById('jf-channels').textContent = jf.channel_count ? jf.channel_count + ' channels' : '0';
+
+      // Remediation Queue
+      const rq = data.reencode_queue;
+      const qPill = document.getElementById('queue-status-pill');
+      if (rq && qPill) {
+        const total = rq.total_items || 0;
+        const comp = rq.completed || 0;
+        const pend = rq.pending || 0;
+        const pct = total > 0 ? ((comp / total) * 100).toFixed(1) : 0;
+        document.getElementById('queue-progress').textContent = `${comp} fixed / ${pend} pending (${pct}%)`;
+        document.getElementById('queue-progress-fill').style.width = pct + '%';
+        if (rq.current_job) {
+          qPill.className = 'status-pill online';
+          qPill.textContent = '● Transcoding';
+          const c = rq.current_job;
+          document.getElementById('queue-current').textContent = `${c.series} S${c.season}E${c.episode}`;
+        } else {
+          qPill.className = 'status-pill browse';
+          qPill.textContent = '● Standing By';
+          document.getElementById('queue-current').textContent = 'Idle (Monitoring Schedule)';
+        }
+        if (rq.next_up) {
+          const n = rq.next_up;
+          const chStr = n.channel ? ` (${n.channel})` : '';
+          document.getElementById('queue-next').textContent = `${n.series} S${n.season}E${n.episode}${chStr}`;
+        } else {
+          document.getElementById('queue-next').textContent = 'None in next 48h';
+        }
+      }
+
+      // TV Guide Channel 1 (Pre-Renderer)
+      const gc = data.guide_channel;
+      const gPill = document.getElementById('guide-status-pill');
+      if (gc && gPill) {
+        const fwd = gc.forward_chunks || 0;
+        const tgt = gc.target_chunks || 16;
+        const hrs = gc.forward_hours != null ? gc.forward_hours.toFixed(2) : '0.00';
+        const gPct = Math.min(100, tgt > 0 ? ((fwd / tgt) * 100).toFixed(1) : 0);
+
+        document.getElementById('guide-current-slot').textContent =
+          (gc.current_chunk_id || '—') + (gc.active_chunk_ready ? ' (Ready)' : (gc.chunks_total > 0 ? ' (Fallback)' : ' (Pending)'));
+        document.getElementById('guide-buffer').textContent = `${hrs}h (${fwd} / ${tgt} chunks)`;
+        document.getElementById('guide-buffer-fill').style.width = gPct + '%';
+        document.getElementById('guide-disk').textContent = `${gc.total_size_mb || 0} MB (${gc.chunks_total || 0} files)`;
+
+        if (gc.rendering_in_progress) {
+          gPill.className = 'status-pill online';
+          gPill.textContent = '● Rendering';
+        } else if (gc.active_chunk_ready) {
+          gPill.className = 'status-pill online';
+          gPill.textContent = '● Ready';
+        } else if (gc.preview_available) {
+          gPill.className = 'status-pill browse';
+          gPill.textContent = '● Staged (Preview Ready)';
+        } else {
+          gPill.className = 'status-pill stopped';
+          gPill.textContent = '● Offline';
+        }
+      }
+    }
+
+    function renderIncidents(incidents) {
+      const container = document.getElementById('incidents-container');
+      const countEl = document.getElementById('incidents-count');
+      if (!incidents || incidents.length === 0) {
+        countEl.textContent = '0 recorded crashes';
+        container.innerHTML = '<div style="color: #10b981; padding: 20px 0;">✓ No crashes recorded. System running smoothly.</div>';
+        return;
+      }
+
+      countEl.textContent = incidents.length + ' incident' + (incidents.length === 1 ? '' : 's') + ' documented';
+      container.innerHTML = '';
+
+      for (const inc of incidents) {
+        const it = inc.item || {};
+        const fa = inc.file_analysis || {};
+        const warnings = fa.warnings || [];
+        const evidence = inc.evidence || [];
+
+        const card = document.createElement('article');
+        card.className = 'incident-card';
+
+        const sevBadge = inc.severity === 'CRITICAL'
+          ? '<span class="incident-badge-crit">CRITICAL</span>'
+          : '<span class="incident-badge-crit" style="color:#fbbf24; background:rgba(245,158,11,0.2);">WARNING</span>';
+
+        const statusBadge = inc.resolved
+          ? '<span class="incident-badge-ok">✓ RESOLVED</span>'
+          : '<span class="incident-badge-crit">ACTIVE RISK</span>';
+
+        card.innerHTML = `
+          <div class="incident-header">
+            <div class="incident-title-block">
+              <h3>${escapeHtml(inc.summary)}</h3>
+              <div class="incident-time">${new Date(inc.timestamp).toLocaleString()} &bull; Type: ${escapeHtml(inc.type)}</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              ${sevBadge}
+              ${statusBadge}
+            </div>
+          </div>
+          <div class="incident-body">
+            <div class="autopsy-grid">
+              <div class="autopsy-box">
+                <h4>Culprit Episode & Slot</h4>
+                <div style="font-weight: 600; color: #fff; margin-bottom: 4px;">${escapeHtml(it.series)} ${escapeHtml(it.season_episode)} — ${escapeHtml(it.title)}</div>
+                <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 6px;">Channel: CH ${escapeHtml(inc.channel.number)} ${escapeHtml(inc.channel.name)}</div>
+                <div style="font-size: 0.75rem; color: #6b7280; font-family: monospace; word-break: break-all;">File: ${escapeHtml(it.file_path)}</div>
+              </div>
+
+              <div class="autopsy-box">
+                <h4>Format & Video Quirks</h4>
+                <div style="font-size: 0.85rem; color: #e5e7eb; margin-bottom: 6px; font-family: monospace;">
+                  ${escapeHtml(fa.codec)} (${escapeHtml(fa.profile)}) &bull; ${escapeHtml(fa.dimensions)} &bull; ${escapeHtml(fa.pixel_format)}
+                </div>
+                ${warnings.map(w => `<div class="autopsy-warning">⚠ ${escapeHtml(w)}</div>`).join('')}
+              </div>
+            </div>
+
+            <div style="margin-top: 12px;">
+              <h4 style="font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; margin-bottom: 6px;">Root Cause & Timeline Evidence</h4>
+              <div class="log-box">
+                ${evidence.map(e => `<div>&bull; ${escapeHtml(e)}</div>`).join('')}
+              </div>
+            </div>
+
+            ${inc.resolved && inc.resolution_note ? `
+              <div class="resolution-banner">
+                <strong>Fix Applied:</strong> ${escapeHtml(inc.resolution_note)}
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        container.appendChild(card);
+      }
+    }
+
+    // Refresh cycles
+    fetchStatus();
+    fetchIncidents();
+    setInterval(fetchStatus, 15000);
+    setInterval(fetchIncidents, 30000);
+  </script>
+</body>
+</html>

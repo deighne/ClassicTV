@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classic TV — Guide</title>
+  <link rel="stylesheet" href="/shared/theme.css?v=1">
+  <style>
+    .guide-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .guide-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      transition: background 0.12s;
+    }
+
+    tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--card-hover);
+    }
+
+    tbody td {
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .col-ch {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--phosphor);
+      width: 72px;
+      white-space: nowrap;
+    }
+
+    .col-name {
+      font-weight: 600;
+      white-space: nowrap;
+      width: 210px;
+    }
+
+    .col-now {
+      color: var(--text);
+    }
+
+    .col-now.offline {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .ep-sub {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .col-next {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .col-rem {
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+      width: 110px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .col-watch {
+      width: 90px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    footer {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="ctv-shell">
+    <header class="ctv-topbar">
+      <div class="ctv-brand-wrap">
+        <a class="ctv-brand" href="/">CLASSIC TV</a>
+        <span id="last-updated" class="ctv-subtitle">Loading…</span>
+      </div>
+      <nav class="ctv-nav" aria-label="Primary">
+        <a class="ctv-nav-link" href="/">Hub</a>
+        <a class="ctv-nav-link" href="/watch/">Watch</a>
+        <a class="ctv-nav-link active" href="/guide/">Guide</a>
+        <a class="ctv-nav-link" href="/channels/">Channels</a>
+        <a class="ctv-nav-link" href="/manage/">Manage</a>
+        <a class="ctv-nav-link" href="/status/">Status</a>
+        <a class="ctv-nav-link" href="/crt/">CRT</a>
+      </nav>
+      <div>
+        <button id="btn-refresh" type="button" class="ctv-btn">Refresh</button>
+      </div>
+    </header>
+
+    <div class="guide-toolbar">
+      <h1 class="guide-title">Live TV Guide</h1>
+    </div>
+
+    <div id="error-banner" class="ctv-error-banner" style="display:none;" role="alert"></div>
+
+    <div class="table-wrapper">
+      <table aria-label="TV Guide">
+        <thead>
+          <tr>
+            <th scope="col">CH #</th>
+            <th scope="col">Channel</th>
+            <th scope="col">Now Playing</th>
+            <th scope="col">Next Up</th>
+            <th scope="col" style="text-align:right;">Remaining</th>
+            <th scope="col" style="text-align:right;">Tune</th>
+          </tr>
+        </thead>
+        <tbody id="guide-body">
+          <tr>
+            <td colspan="6" style="padding:28px 14px;color:var(--muted);text-align:center;">Loading live guide…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      <span>Classic TV 4.0 · Live Jellyfin Schedule</span>
+      <span>Auto-refreshes every 60s</span>
+    </footer>
+  </div>
+
+  <script>
+    'use strict';
+
+    const guideBodyEl   = document.getElementById('guide-body');
+    const errorBannerEl = document.getElementById('error-banner');
+    const lastUpdatedEl = document.getElementById('last-updated');
+    const refreshBtn    = document.getElementById('btn-refresh');
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str == null ? '' : String(str);
+      return d.innerHTML;
+    }
+
+    function fmtRemaining(slot) {
+      if (!slot || slot.IsOffline || !slot.Duration || slot.Duration <= 0) return '';
+      const mins = Math.max(0, Math.round((slot.Duration - (slot.StartOffset || 0)) / 60));
+      return mins + ' min';
+    }
+
+    async function loadGuide() {
+      errorBannerEl.style.display = 'none';
+      try {
+        const res = await fetch('/ClassicTV/channels', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const channels = (data.Channels || []).slice().sort((a, b) => {
+          const na = a.Number > 0 ? a.Number : 99999;
+          const nb = b.Number > 0 ? b.Number : 99999;
+          return na - nb;
+        });
+
+        const slots = await Promise.all(
+          channels.map((ch) =>
+            fetch('/ClassicTV/channel/' + encodeURIComponent(ch.Id), { cache: 'no-store' })
+              .then((r) => (r.ok ? r.json() : null))
+              .catch(() => null)
+          )
+        );
+
+        if (channels.length === 0) {
+          guideBodyEl.innerHTML = '<tr><td colspan="6" style="padding:28px 14px;color:var(--muted);text-align:center;">No enabled channels found.</td></tr>';
+        } else {
+          guideBodyEl.innerHTML = channels.map((ch, idx) => {
+            const slot = slots[idx];
+            const chNum = ch.Number > 0 ? ch.Number : idx + 1;
+            const offline = !slot || slot.IsOffline;
+            const nowTitle = offline
+              ? (ch.Mirror ? 'Mirror Idle' : 'Offline')
+              : (slot.Title || 'On Air');
+            const epSub = !offline && slot.EpisodeTitle ? `<span class="ep-sub">${esc(slot.EpisodeTitle)}</span>` : '';
+            const nextTitle = slot && slot.NextItem
+              ? esc(slot.NextItem.Title || '') + (slot.NextItem.EpisodeTitle ? ' — ' + esc(slot.NextItem.EpisodeTitle) : '')
+              : '—';
+            const rem = fmtRemaining(slot);
+
+            return `<tr>
+              <td class="col-ch">${esc(chNum)}</td>
+              <td class="col-name">${esc(ch.Name)}</td>
+              <td class="col-now${offline ? ' offline' : ''}">${esc(nowTitle)}${epSub}</td>
+              <td class="col-next">${nextTitle}</td>
+              <td class="col-rem">${esc(rem)}</td>
+              <td class="col-watch"><a class="ctv-btn ctv-btn-primary" href="/watch/#${encodeURIComponent(ch.Id)}">Watch</a></td>
+            </tr>`;
+          }).join('');
+        }
+
+        lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch (err) {
+        errorBannerEl.textContent = '⚠ Failed to load live guide: ' + (err.message || err);
+        errorBannerEl.style.display = 'block';
+      }
+    }
+
+    refreshBtn.addEventListener('click', loadGuide);
+    loadGuide();
+    setInterval(loadGuide, 60000);
+  </script>
+</body>
+</html>

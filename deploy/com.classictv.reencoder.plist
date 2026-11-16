@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classictv.reencoder</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/python3</string>
+        <string>/Users/dane/projects/ClassicTV3.0/tools/classictv_worker.py</string>
+        <string>--daemon</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/dane/projects/ClassicTV3.0</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>CLASSICTV_QUEUE_FILE</key>
+        <string>/Users/dane/projects/ClassicTV3.0/web/reencode_queue.json</string>
+        <key>FFMPEG_BIN</key>
+        <string>/Applications/Jellyfin.app/Contents/MacOS/ffmpeg</string>
+    </dict>
+    <key>Nice</key>
+    <integer>10</integer>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/dane/Library/Logs/classictv-reencoder.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/dane/Library/Logs/classictv-reencoder.log</string>
+</dict>
+</plist>

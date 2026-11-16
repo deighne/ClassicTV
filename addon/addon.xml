@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon
+    id="script.classictv.service"
+    name="Classic TV"
+    version="3.0.0"
+    provider-name="Deighne">
+
+    <requires>
+        <!-- Kodi 21 (Omega) / CoreELEC 21.x on the Le Potato -->
+        <import addon="xbmc.python" version="3.0.0"/>
+    </requires>
+
+    <!-- Service entry point: started automatically by Kodi at boot -->
+    <extension point="xbmc.service" library="service.py" start="login"/>
+
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">Classic TV broadcast simulation — 24/7 themed channels synced to wall-clock time</summary>
+        <description lang="en_GB">
+            Classic TV recreates the experience of watching cable television circa 1990–2010 on a
+            real CRT. Themed channels play continuously, synchronized to wall-clock time so every
+            viewer sees the same content at the same moment. The addon asks the Schedule_Service on
+            jfmac what is playing and plays it — all schedule logic lives server-side.
+        </description>
+        <platform>all</platform>
+        <license>MIT</license>
+        <source>https://github.com/humanelement/classictv3</source>
+    </extension>
+
+</addon>

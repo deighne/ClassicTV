@@ -1,0 +1,9 @@
+id: rachel
+name: Rachel's Channel
+number: 67
+color: "#6600ff"
+blocks:
+  - name: All Day
+    start_hour: 0
+    end_hour: 24
+    offline: true

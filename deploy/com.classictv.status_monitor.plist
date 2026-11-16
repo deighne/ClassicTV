@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classictv.status_monitor</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/Users/dane/projects/ClassicTV3.0/tools/classictv-status.py</string>
+        <string>--daemon</string>
+        <string>--interval</string>
+        <string>30</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/dane/projects/ClassicTV3.0</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>SWEET_POTATO_IP</key>
+        <string>192.168.1.237</string>
+        <key>JELLYFIN_BASE_URL</key>
+        <string>http://localhost:8096</string>
+    </dict>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/dane/Library/Logs/classictv-status.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/dane/Library/Logs/classictv-status.log</string>
+</dict>
+</plist>

@@ -1,0 +1,222 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BB000101 /* ClassicTVApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000201 /* ClassicTVApp.swift */; };
+		BB000102 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000202 /* Models.swift */; };
+		BB000103 /* ClassicTVClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000203 /* ClassicTVClient.swift */; };
+		BB000104 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000204 /* PlayerViewModel.swift */; };
+		BB000105 /* CRTStaticView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000205 /* CRTStaticView.swift */; };
+		BB000106 /* ChannelBugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000206 /* ChannelBugView.swift */; };
+		BB000107 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000207 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		BB000200 /* ClassicTV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClassicTV.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB000201 /* ClassicTVApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicTVApp.swift; sourceTree = "<group>"; };
+		BB000202 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		BB000203 /* ClassicTVClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicTVClient.swift; sourceTree = "<group>"; };
+		BB000204 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
+		BB000205 /* CRTStaticView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CRTStaticView.swift; sourceTree = "<group>"; };
+		BB000206 /* ChannelBugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBugView.swift; sourceTree = "<group>"; };
+		BB000207 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BB000208 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BB000301 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BB000400 = {
+			isa = PBXGroup;
+			children = (
+				BB000401 /* ClassicTV */,
+				BB000402 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BB000401 /* ClassicTV */ = {
+			isa = PBXGroup;
+			children = (
+				BB000201 /* ClassicTVApp.swift */,
+				BB000202 /* Models.swift */,
+				BB000203 /* ClassicTVClient.swift */,
+				BB000204 /* PlayerViewModel.swift */,
+				BB000205 /* CRTStaticView.swift */,
+				BB000206 /* ChannelBugView.swift */,
+				BB000207 /* ContentView.swift */,
+				BB000208 /* Info.plist */,
+			);
+			path = ClassicTV;
+			sourceTree = "<group>";
+		};
+		BB000402 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BB000200 /* ClassicTV.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BB000501 /* ClassicTV */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB000601 /* Build configuration list for PBXNativeTarget "ClassicTV" */;
+			buildPhases = (
+				BB000701 /* Sources */,
+				BB000301 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClassicTV;
+			productName = ClassicTV;
+			productReference = BB000200 /* ClassicTV.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BB000801 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = BB000602 /* Build configuration list for PBXProject "ClassicTV" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BB000400;
+			productRefGroup = BB000402 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BB000501 /* ClassicTV */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BB000701 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB000101 /* ClassicTVApp.swift in Sources */,
+				BB000102 /* Models.swift in Sources */,
+				BB000103 /* ClassicTVClient.swift in Sources */,
+				BB000104 /* PlayerViewModel.swift in Sources */,
+				BB000105 /* CRTStaticView.swift in Sources */,
+				BB000106 /* ChannelBugView.swift in Sources */,
+				BB000107 /* ContentView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		BB000901 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y6H8Y9YTWU;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClassicTV/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = photos.dane.ClassicTV.iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BB000902 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Y6H8Y9YTWU;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ClassicTV/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = photos.dane.ClassicTV.iOS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BB000903 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BB000904 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BB000601 /* Build configuration list for PBXNativeTarget "ClassicTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB000901 /* Debug */,
+				BB000902 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB000602 /* Build configuration list for PBXProject "ClassicTV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB000903 /* Debug */,
+				BB000904 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = BB000801 /* Project object */;
+}

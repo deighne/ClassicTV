@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.classictv.schedule_service</string>
+
+    <!-- run_service.sh sources .env (which holds JELLYFIN_API_KEY and
+         OFFLINE_CLIP_JELLYFIN_ID) before exec-ing the Python service.
+         launchd does not support EnvironmentFile natively, so the wrapper
+         handles secret injection without hardcoding secrets in this plist. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/dane/projects/ClassicTV3.0/server/run_service.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/dane/projects/ClassicTV3.0</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>JELLYFIN_BASE_URL</key>
+        <string>http://localhost:8096</string>
+        <key>SERVICE_PORT</key>
+        <string>8300</string>
+        <key>CHANNEL_CONFIG_DIR</key>
+        <string>/Users/dane/projects/ClassicTV3.0/channels</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/dane/Library/Logs/ClassicTV/schedule_service.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/dane/Library/Logs/ClassicTV/schedule_service_error.log</string>
+
+    <!-- Wait 10 seconds between crash restarts to avoid rapid-restart loops. -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>

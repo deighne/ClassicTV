@@ -1,0 +1,52 @@
+# ruff.toml — Classic TV 3.0
+# Run: ruff check server/ addon/ tools/ tests/
+# On-save hook: see ~/.kiro/hooks/ruff-on-save.json
+
+[lint]
+select = [
+    "F",      # Pyflakes — undefined names, unused imports, f-strings without placeholders
+    "E",      # pycodestyle errors
+    "S110",   # try-except-pass without logging (silent swallowing)
+    "C408",   # unnecessary dict/list/tuple calls
+    "RUF046", # unnecessary int() cast
+    "RUF013", # implicit Optional
+    "RUF059", # unused unpacked variable
+    "F841",   # local variable assigned but never used
+]
+
+ignore = [
+    # BLE001: blind except (Exception). Intentional throughout the Kodi addon —
+    # nothing must escape to Kodi's Python runtime. Documented with noqa where needed.
+    "BLE001",
+
+    # DTZ001: datetime() without tzinfo. Intentional — we construct naive datetimes
+    # and immediately localize with pytz.localize(). The rule doesn't understand this.
+    "DTZ001",
+
+    # SIM117: combine nested with statements. Style preference, not a bug.
+    "SIM117",
+
+    # I001: import sorting. Noise for an existing codebase; fix separately if desired.
+    "I001",
+
+    # RUF100: unused noqa directives. Will resolve naturally as issues are fixed.
+    "RUF100",
+
+    # E501: line too long. Not enforced in this project.
+    "E501",
+
+    # E741: ambiguous variable names. Too noisy in test files.
+    "E741",
+
+    # E402: module level import not at top. Intentional in addon/service.py and test
+    # files — sys.path manipulation must precede addon imports on both Kodi and dev machine.
+    "E402",
+]
+
+exclude = [
+    ".venv",
+    ".kiro",
+    ".hypothesis",
+    ".pytest_cache",
+    "__pycache__",
+]

@@ -1,0 +1,36 @@
+{
+  "channels": [
+    {
+      "id": "guide",
+      "name": "TV Guide",
+      "number": 1,
+      "enabled": true,
+      "type": "guide"
+    },
+    {
+      "id": "saturday-morning",
+      "name": "Saturday Morning",
+      "number": 2,
+      "enabled": true,
+      "type": "series",
+      "maxRating": "TV-PG",
+      "allowUnrated": true,
+      "genres": ["Animation"],
+      "blocks": [
+        {
+          "id": "all-day",
+          "name": "All Day",
+          "startHour": 0,
+          "endHour": 24,
+          "shows": [
+            {
+              "id": "JELLYFIN_SERIES_ID_HERE",
+              "name": "Example Series",
+              "weight": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

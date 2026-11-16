@@ -1,0 +1,380 @@
+/*
+ * Classic TV: Jellyfin 12 web theme
+ * Prevue Channel look: deep navy, gold and cyan accents, VT323 for headings.
+ * Body text stays in the normal UI font so it is readable; the retro faces are
+ * for titles and navigation only. Square corners, no overlays.
+ *
+ * Targets both Jellyfin 12's default Modern (MUI + --jf-* CSS variables) layout
+ * and the Legacy layout.
+ *
+ * Source of truth for Jellyfin Dashboard > General > Branding > Custom CSS.
+ * Apply with: JELLYFIN_API_KEY=... python3 tools/apply_jellyfin_theme.py --apply
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root,
+[data-theme] {
+  --ctv-bg: #0a0a2e;
+  --ctv-bg-raised: #0d1b3e;
+  --ctv-card: #162450;
+  --ctv-dialog: #0a0f2a;
+  --ctv-gold: #ffd700;
+  --ctv-cyan: #00e5ff;
+  --ctv-amber: #ffb347;
+  --ctv-green: #00cc66;
+  --ctv-blue: #4169e1;
+  --ctv-text: #eeeedd;
+  --ctv-dim: #9aa8bb;
+  --ctv-retro: 'VT323', 'Courier New', monospace;
+
+  /* Jellyfin 12 shared theme & MUI CSS variables */
+  --jf-card-borderRadius: 0px;
+  --jf-palette-background-default: var(--ctv-bg);
+  --jf-palette-background-defaultImage: none;
+  --jf-palette-background-paper: var(--ctv-bg-raised);
+  --jf-palette-background-paperChannel: 13 27 62;
+  --jf-palette-AppBar-defaultBg: var(--ctv-bg);
+  --jf-palette-AppBar-transparentBg: rgba(10, 10, 46, 0.85);
+  --jf-palette-AppBar-gradient: none;
+  --jf-palette-text-primary: var(--ctv-text);
+  --jf-palette-text-secondary: var(--ctv-dim);
+  --jf-palette-primary-main: var(--ctv-gold);
+  --jf-palette-primary-mainChannel: 255 215 0;
+  --jf-palette-primary-dark: #e6c200;
+  --jf-palette-primary-contrastText: #000028;
+  --jf-palette-secondary-main: var(--ctv-cyan);
+  --jf-palette-secondary-contrastText: #000028;
+  --jf-palette-divider: rgba(65, 105, 225, 0.3);
+  --jf-palette-action-hover: rgba(0, 229, 255, 0.1);
+  --jf-palette-action-focus: rgba(0, 229, 255, 0.18);
+  --jf-palette-action-selectedOpacity: 0.16;
+  --jf-palette-Button-inheritContainedBg: var(--ctv-card);
+  --jf-palette-Button-inheritContainedHoverBg: #1f326b;
+  --jf-palette-FilledInput-bg: var(--ctv-card);
+  --jf-palette-FilledInput-borderColor: var(--ctv-blue);
+  --jf-palette-SnackbarContent-bg: var(--ctv-card);
+  --jf-palette-SnackbarContent-color: var(--ctv-text);
+  --jf-palette-Alert-infoFilledBg: var(--ctv-card);
+  --jf-palette-Alert-infoFilledColor: var(--ctv-text);
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+html,
+body,
+.backgroundContainer,
+.nowPlayingPlaylist,
+.ui-corner-all,
+.ui-shadow,
+.wizardStartForm {
+  background-color: var(--ctv-bg) !important;
+  color: var(--ctv-text);
+}
+
+/* ---- Header & Modern App Bar --------------------------------------------- */
+.skinHeader:not(.osdHeader),
+.MuiAppBar-root {
+  background: var(--ctv-bg) !important;
+  border-bottom: 2px solid var(--ctv-gold);
+  box-shadow: none;
+}
+
+/* ---- Video player OSD ----------------------------------------------------
+ * During playback the header is the OSD's top bar. It must stay a see-through
+ * fade over the picture, not a solid navy bar, so the theme leaves it alone
+ * and restores Jellyfin's own look. */
+.skinHeader.osdHeader {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), transparent) !important;
+  border-bottom: 0 !important;
+}
+
+.headerTabs .emby-tab-button,
+.MuiAppBar-root .MuiToolbar-root .MuiButton-text,
+.MuiAppBar-root .MuiTab-root {
+  font-family: var(--ctv-retro);
+  font-size: 1.35rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ctv-dim);
+  border-radius: 0;
+}
+
+.headerTabs .emby-tab-button-active,
+.headerTabs .emby-tab-button:hover,
+.MuiAppBar-root .MuiToolbar-root .MuiButton-textPrimary,
+.MuiAppBar-root .MuiToolbar-root .MuiButton-text:hover,
+.MuiAppBar-root .MuiTab-root.Mui-selected,
+.MuiAppBar-root .MuiTab-root:hover {
+  color: var(--ctv-gold) !important;
+}
+
+.MuiAppBar-root .MuiTabs-indicator {
+  background-color: var(--ctv-gold);
+}
+
+/* Merged sticky library toolbar view heading (Modern layout) */
+.MuiAppBar-root .MuiTypography-h2 {
+  font-family: var(--ctv-retro);
+  font-size: 1.55rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ctv-amber);
+}
+
+/* ---- Navigation drawer & Dashboard sidebar ------------------------------- */
+.mainDrawer,
+.drawer-open,
+.MuiDrawer-paper {
+  background: var(--ctv-bg-raised) !important;
+  border-right: 2px solid var(--ctv-blue) !important;
+}
+
+.navMenuOption,
+.MuiDrawer-paper .MuiListItemButton-root {
+  color: var(--ctv-dim);
+  border-radius: 0;
+}
+
+.navMenuOption:hover,
+.navMenuOption-selected,
+.MuiDrawer-paper .MuiListItemButton-root:hover,
+.MuiDrawer-paper .MuiListItemButton-root.Mui-selected {
+  color: var(--ctv-cyan) !important;
+  background: rgba(0, 229, 255, 0.12) !important;
+}
+
+.MuiDrawer-paper .MuiListItemButton-root.Mui-selected .MuiListItemIcon-root,
+.MuiDrawer-paper .MuiListItemButton-root:hover .MuiListItemIcon-root {
+  color: var(--ctv-cyan);
+}
+
+.MuiDrawer-paper .MuiListSubheader-root {
+  font-family: var(--ctv-retro);
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ctv-amber);
+}
+
+/* ---- Section headings ---------------------------------------------------- */
+.sectionTitle,
+.sectionTitle-cards,
+#loginPage .visualLoginForm h1 {
+  font-family: var(--ctv-retro);
+  font-size: 1.6em;
+  letter-spacing: 1px;
+  color: var(--ctv-amber);
+}
+
+/* ---- Cards --------------------------------------------------------------- */
+.cardBox,
+.card,
+.cardScalable,
+.cardImageContainer,
+.cardPadder,
+.cardContent,
+.cardOverlayContainer,
+.visualCardBox,
+.paperList,
+.itemDetailImage,
+.blurhash-canvas {
+  border-radius: 0 !important;
+}
+
+.visualCardBox,
+.paperList,
+.cardBox:not(.visualCardBox) .cardPadder {
+  background-color: var(--ctv-card);
+}
+
+.cardScalable {
+  outline: 1px solid rgba(65, 105, 225, 0.25);
+  transition: outline-color 0.15s, box-shadow 0.15s;
+}
+
+.card:hover .cardScalable,
+.card:focus-within .cardScalable {
+  outline-color: var(--ctv-cyan);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+}
+
+/* ---- Buttons and inputs -------------------------------------------------- */
+.raised,
+.emby-button,
+.emby-button.button-submit,
+.MuiButton-root,
+.MuiButtonGroup-root,
+.MuiButtonGroup-grouped,
+.MuiChip-root,
+.MuiOutlinedInput-root,
+.MuiFilledInput-root {
+  border-radius: 0 !important;
+}
+
+.button-submit,
+.button-accent,
+.MuiButton-containedPrimary {
+  background: var(--ctv-gold) !important;
+  color: #000028 !important;
+  font-weight: 600;
+}
+
+.button-submit:hover,
+.button-submit:focus,
+.button-accent:hover,
+.button-accent:focus,
+.MuiButton-containedPrimary:hover,
+.MuiButton-containedPrimary:focus {
+  background: #fff1a0 !important;
+}
+
+.emby-input,
+.emby-select,
+.emby-select-withcolor,
+.emby-textarea {
+  background: var(--ctv-card) !important;
+  border: 1px solid var(--ctv-blue) !important;
+  border-radius: 0 !important;
+  color: var(--ctv-text);
+}
+
+.emby-input:focus,
+.emby-select:focus,
+.emby-select-withcolor:focus,
+.emby-textarea:focus {
+  border-color: var(--ctv-cyan) !important;
+  box-shadow: 0 0 0 1px var(--ctv-cyan);
+}
+
+/* ---- Dialogs & menus ----------------------------------------------------- */
+.dialog,
+.formDialogContent,
+.MuiDialog-paper,
+.MuiMenu-paper,
+.MuiPopover-paper {
+  background: var(--ctv-dialog) !important;
+  border: 1px solid var(--ctv-blue);
+  border-radius: 0 !important;
+}
+
+.collapseContent,
+.formDialogFooter:not(.formDialogFooter-clear),
+.formDialogHeader:not(.formDialogHeader-clear),
+.appfooter,
+.playlistSectionButton {
+  background-color: var(--ctv-bg-raised);
+}
+
+.formDialogHeaderTitle,
+.MuiDialogTitle-root {
+  font-family: var(--ctv-retro);
+  font-size: 1.5em;
+  color: var(--ctv-gold);
+}
+
+/* ---- Progress & indicators ----------------------------------------------- */
+.itemProgressBar {
+  background: var(--ctv-card);
+}
+
+.itemProgressBarForeground {
+  background: var(--ctv-green) !important;
+}
+
+/* ---- Detail pages -------------------------------------------------------- */
+.detailPagePrimaryContainer .itemName {
+  font-family: var(--ctv-retro);
+  color: var(--ctv-gold);
+}
+
+.detailRibbon {
+  background: rgba(13, 27, 62, 0.85);
+}
+
+/* ---- Login page & disclaimer --------------------------------------------- */
+#loginPage .padded-left.padded-right,
+.loginPage .padded-left.padded-right {
+  background: transparent !important;
+}
+
+#loginPage .readOnlyContent .raised {
+  background: var(--ctv-card);
+  border: 1px solid rgba(65, 105, 225, 0.45);
+  color: var(--ctv-text);
+}
+
+#loginPage .readOnlyContent .raised:hover,
+#loginPage .readOnlyContent .raised:focus {
+  background: #1f326b;
+  border-color: var(--ctv-cyan);
+  color: var(--ctv-cyan);
+}
+
+/* Jellyfin 12's .loginDisclaimerContainer already provides top spacing. */
+.loginDisclaimerContainer {
+  margin-top: 1.5em;
+}
+
+.loginDisclaimer {
+  margin: 0 auto;
+}
+
+.ctv-disclaimer {
+  text-align: center;
+  padding: 0.75em 1.25em;
+}
+
+.ctv-disclaimer-title {
+  font-family: var(--ctv-retro);
+  font-size: 2.6em;
+  line-height: 1.1;
+  color: var(--ctv-gold);
+  letter-spacing: 4px;
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.45);
+}
+
+.ctv-disclaimer-sub {
+  font-family: var(--ctv-retro);
+  font-size: 1.2em;
+  color: var(--ctv-cyan);
+  letter-spacing: 3px;
+  margin-top: 4px;
+}
+
+.ctv-disclaimer-bar {
+  margin: 12px auto 0;
+  width: 200px;
+  height: 3px;
+  background: linear-gradient(90deg, #4169e1, #ffd700, #00e5ff, #00cc66);
+}
+
+/* ---- Scrollbars and toasts ----------------------------------------------- */
+* {
+  scrollbar-color: var(--ctv-blue) var(--ctv-bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  background: var(--ctv-bg);
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-track-piece {
+  background: var(--ctv-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ctv-blue);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ctv-cyan);
+}
+
+.toast,
+.MuiSnackbarContent-root {
+  background: var(--ctv-card) !important;
+  border-left: 3px solid var(--ctv-gold);
+  border-radius: 0 !important;
+}
