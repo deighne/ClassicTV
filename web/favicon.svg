@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#07090b"/>
+  <!-- Rabbit-ear antennas -->
+  <path d="M22 10 L31 20 M42 10 L33 20" stroke="#46ff7a" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="22" cy="10" r="2.2" fill="#46ff7a"/>
+  <circle cx="42" cy="10" r="2.2" fill="#46ff7a"/>
+  <!-- CRT cabinet -->
+  <rect x="8" y="19" width="48" height="36" rx="7" fill="#121619" stroke="#46ff7a" stroke-width="2.5"/>
+  <!-- Curved phosphor CRT screen -->
+  <rect x="13.5" y="24.5" width="30" height="25" rx="4.5" fill="#0d2616" stroke="#46ff7a" stroke-width="1.8"/>
+  <!-- Scanlines + phosphor glint -->
+  <path d="M16 31 H41 M16 37 H41 M16 43 H41" stroke="#46ff7a" stroke-opacity="0.35" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M18 28.5 Q24 27 30 28.5" stroke="#46ff7a" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <!-- Channel & volume dials -->
+  <circle cx="49.5" cy="30" r="2.6" fill="#46ff7a"/>
+  <circle cx="49.5" cy="38.5" r="2.6" fill="#8b989d"/>
+  <!-- Speaker grille -->
+  <path d="M47 45.5 H52 M47 48.5 H52" stroke="#8b989d" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
