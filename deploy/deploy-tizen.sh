@@ -29,6 +29,11 @@ else
 fi
 
 WGT_PATH="$(find "$DIST_DIR" -maxdepth 1 -name '*.wgt' | head -n 1)"
+WGT_NO_SPACE="$DIST_DIR/$(basename "$WGT_PATH" | tr -d ' ')"
+if [ "$WGT_PATH" != "$WGT_NO_SPACE" ]; then
+  mv -f "$WGT_PATH" "$WGT_NO_SPACE"
+  WGT_PATH="$WGT_NO_SPACE"
+fi
 echo "Packaged: $WGT_PATH"
 
 if [ -n "$TV_IP" ]; then
@@ -37,5 +42,7 @@ if [ -n "$TV_IP" ]; then
     exit 1
   fi
   sdb connect "$TV_IP"
-  tizen install -n "$(basename "$WGT_PATH")" -t "$TV_IP" -- "$DIST_DIR"
+  TARGET_NAME="$(sdb devices | awk -v ip="$TV_IP" '$1 ~ ip && $2 == "device" {print $3; exit}')"
+  TARGET_NAME="${TARGET_NAME:-$TV_IP}"
+  tizen install -n "$(basename "$WGT_PATH")" -t "$TARGET_NAME" -- "$DIST_DIR"
 fi
