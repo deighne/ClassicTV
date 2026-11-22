@@ -25,6 +25,8 @@
     RETURN: 10009,
     CH_UP: 427,
     CH_DOWN: 428,
+    PAGE_UP: 33,
+    PAGE_DOWN: 34,
     GUIDE: 458,
     INFO: 457,
     CAPTION: 10221,
@@ -62,6 +64,7 @@
 
   const drawerEl = document.getElementById('channel-drawer');
   const drawerList = document.getElementById('drawer-list');
+  const drawerCc = document.getElementById('drawer-cc');
   const drawerSignout = document.getElementById('drawer-signout');
 
   const state = {
@@ -89,6 +92,7 @@
     exitTimer: null,
     ccEnabled: localStorage.getItem(CC_PREF_KEY) === '1',
     subtitleStreams: [],
+    subtitleBlobUrls: [],
   };
 
   // Pre-generate 4 crisp 640x360 CRT static frames
@@ -143,15 +147,12 @@
           'ColorF0Red',
           '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         ];
-        if (typeof window.tizen.tvinputdevice.registerKeyBatch === 'function') {
-          window.tizen.tvinputdevice.registerKeyBatch(keys);
-        } else {
-          keys.forEach((k) => {
-            try {
-              window.tizen.tvinputdevice.registerKey(k);
-            } catch (_) {}
-          });
-        }
+        // Register individually so one unsupported key on a TV model doesn't abort the rest
+        keys.forEach((k) => {
+          try {
+            window.tizen.tvinputdevice.registerKey(k);
+          } catch (_) {}
+        });
       }
     } catch (_) {}
   }
@@ -382,37 +383,79 @@
     video.removeAttribute('src');
     video.load();
     state.subtitleStreams = [];
+    if (state.subtitleBlobUrls.length > 0) {
+      state.subtitleBlobUrls.forEach((u) => {
+        try { URL.revokeObjectURL(u); } catch (_) {}
+      });
+      state.subtitleBlobUrls = [];
+    }
+  }
+
+  function updateCcUi() {
+    if (!drawerCc) return;
+    drawerCc.textContent = state.ccEnabled ? 'CC: ON' : 'CC: OFF';
+    drawerCc.classList.toggle('active', state.ccEnabled);
+  }
+
+  function applySubtitleTrackMode() {
+    for (let i = 0; i < video.textTracks.length; i++) {
+      video.textTracks[i].mode = (state.ccEnabled && i === 0) ? 'showing' : 'disabled';
+    }
+  }
+
+  function subtitleScore(s) {
+    const codec = String(s.Codec || '').toLowerCase();
+    const isText = s.IsTextSubtitleStream === true ||
+      ['srt', 'subrip', 'vtt', 'webvtt', 'ass', 'ssa', 'smi', 'ttml'].includes(codec);
+    const lang = String(s.Language || '').toLowerCase();
+    const isEng = lang === 'eng' || lang === 'en' || lang.startsWith('en-');
+    return (isText ? 4 : 0) + (isEng ? 2 : 0) + (s.IsDefault ? 1 : 0);
   }
 
   function attachSubtitles(itemId, sourceId, mediaStreams) {
-    const subs = (mediaStreams || []).filter((s) => s.Type === 'Subtitle');
+    const subs = (mediaStreams || [])
+      .filter((s) => s.Type === 'Subtitle')
+      .sort((a, b) => subtitleScore(b) - subtitleScore(a));
     state.subtitleStreams = subs;
     if (subs.length === 0) return;
 
     const { serverUrl, accessToken } = state.auth;
+    const seq = state.tuneSeq;
     subs.forEach((s, idx) => {
       const track = document.createElement('track');
       track.kind = 'subtitles';
       track.label = s.DisplayTitle || s.Language || `Track ${idx + 1}`;
       track.srclang = s.Language || 'en';
-      track.src = `${serverUrl}/Videos/${encodeURIComponent(itemId)}/${encodeURIComponent(sourceId)}/Subtitles/${s.Index}/Stream.vtt?api_key=${encodeURIComponent(accessToken)}`;
+      const vttUrl = `${serverUrl}/Videos/${encodeURIComponent(itemId)}/${encodeURIComponent(sourceId)}/Subtitles/${s.Index}/Stream.vtt?api_key=${encodeURIComponent(accessToken)}`;
       track.default = state.ccEnabled && idx === 0;
       video.appendChild(track);
+
+      // Fetch VTT via XHR/fetch -> blob URL so Tizen file:// origin never blocks <track>
+      fetch(vttUrl)
+        .then((res) => (res.ok ? res.text() : Promise.reject(new Error('vtt'))))
+        .then((vttText) => {
+          if (seq !== state.tuneSeq) return;
+          const blobUrl = URL.createObjectURL(new Blob([vttText], { type: 'text/vtt' }));
+          state.subtitleBlobUrls.push(blobUrl);
+          track.src = blobUrl;
+          applySubtitleTrackMode();
+        })
+        .catch(() => {
+          if (seq !== state.tuneSeq) return;
+          track.src = vttUrl;
+          applySubtitleTrackMode();
+        });
     });
 
-    setTimeout(() => {
-      for (let i = 0; i < video.textTracks.length; i++) {
-        video.textTracks[i].mode = (state.ccEnabled && i === 0) ? 'showing' : 'disabled';
-      }
-    }, 60);
+    video.addEventListener('loadedmetadata', applySubtitleTrackMode, { once: true });
+    setTimeout(applySubtitleTrackMode, 60);
   }
 
   function toggleSubtitles() {
     state.ccEnabled = !state.ccEnabled;
     localStorage.setItem(CC_PREF_KEY, state.ccEnabled ? '1' : '0');
-    for (let i = 0; i < video.textTracks.length; i++) {
-      video.textTracks[i].mode = (state.ccEnabled && i === 0) ? 'showing' : 'disabled';
-    }
+    updateCcUi();
+    applySubtitleTrackMode();
     if (state.currentChannel) {
       const idx = state.channels.findIndex((c) => c.Id === state.currentChannel.Id);
       const chNum = formatChannelNumber(state.currentChannel, idx >= 0 ? idx : 0);
@@ -793,6 +836,8 @@
     }
   });
 
+  updateCcUi();
+  if (drawerCc) drawerCc.addEventListener('click', toggleSubtitles);
   drawerSignout.addEventListener('click', signOut);
 
   function handleLoginKey(e) {
@@ -817,7 +862,7 @@
     if (code === KEY.DOWN) {
       e.preventDefault();
       const idx = items.indexOf(document.activeElement);
-      if (document.activeElement === drawerSignout && items.length > 0) {
+      if ((document.activeElement === drawerSignout || document.activeElement === drawerCc) && items.length > 0) {
         items[0].focus();
       } else if (idx >= 0 && idx < items.length - 1) {
         items[idx + 1].focus();
@@ -830,10 +875,16 @@
       if (idx > 0) {
         items[idx - 1].focus();
       } else if (idx === 0) {
-        drawerSignout.focus();
+        (drawerCc || drawerSignout).focus();
       } else if (items.length > 0) {
         items[items.length - 1].focus();
       }
+    } else if (code === KEY.LEFT && document.activeElement === drawerSignout && drawerCc) {
+      e.preventDefault();
+      drawerCc.focus();
+    } else if (code === KEY.RIGHT && document.activeElement === drawerCc) {
+      e.preventDefault();
+      drawerSignout.focus();
     } else if (code === KEY.RIGHT || code === KEY.RETURN || code === KEY.ESCAPE || code === KEY.GUIDE) {
       e.preventDefault();
       closeDrawer();
@@ -856,14 +907,27 @@
       return;
     }
 
+    if (e.key === 'ChannelUp') {
+      e.preventDefault();
+      stepChannel(1);
+      return;
+    }
+    if (e.key === 'ChannelDown') {
+      e.preventDefault();
+      stepChannel(-1);
+      return;
+    }
+
     switch (code) {
       case KEY.UP:
       case KEY.CH_UP:
+      case KEY.PAGE_UP:
         e.preventDefault();
         stepChannel(1);
         break;
       case KEY.DOWN:
       case KEY.CH_DOWN:
+      case KEY.PAGE_DOWN:
         e.preventDefault();
         stepChannel(-1);
         break;
@@ -887,6 +951,7 @@
         }
         flashHint();
         break;
+      case KEY.RIGHT:
       case KEY.CAPTION:
         e.preventDefault();
         toggleSubtitles();
