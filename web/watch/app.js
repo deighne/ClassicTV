@@ -326,8 +326,19 @@
     btnCc.classList.remove('active');
   }
 
+  function subtitleScore(s) {
+    const codec = String(s.Codec || '').toLowerCase();
+    const isText = s.IsTextSubtitleStream === true ||
+      ['srt', 'subrip', 'vtt', 'webvtt', 'ass', 'ssa', 'smi', 'ttml'].includes(codec);
+    const lang = String(s.Language || '').toLowerCase();
+    const isEng = lang === 'eng' || lang === 'en' || lang.startsWith('en-');
+    return (isText ? 4 : 0) + (isEng ? 2 : 0) + (s.IsDefault ? 1 : 0);
+  }
+
   function attachSubtitles(itemId, sourceId, mediaStreams) {
-    const subs = (mediaStreams || []).filter((s) => s.Type === 'Subtitle');
+    const subs = (mediaStreams || [])
+      .filter((s) => s.Type === 'Subtitle')
+      .sort((a, b) => subtitleScore(b) - subtitleScore(a));
     state.subtitleStreams = subs;
     if (subs.length === 0) {
       btnCc.classList.add('hidden');
@@ -424,16 +435,75 @@
 
   function playDirectUrl(url, offsetSeconds) {
     return new Promise((resolve) => {
+      const seq = state.tuneSeq;
+      let settled = false;
+      let seekDone = !(offsetSeconds > 0);
+      let attempts = 0;
+
+      const targetTime = () => {
+        if (!(offsetSeconds > 0)) return 0;
+        if (Number.isFinite(video.duration) && video.duration > 1) {
+          return Math.min(offsetSeconds, Math.max(0, video.duration - 1));
+        }
+        return offsetSeconds;
+      };
+
+      const cleanupSeek = () => {
+        video.removeEventListener('loadeddata', trySeek);
+        video.removeEventListener('canplay', trySeek);
+        video.removeEventListener('playing', trySeek);
+        video.removeEventListener('seeked', onSeeked);
+      };
+
+      const trySeek = () => {
+        if (seq !== state.tuneSeq || seekDone) return;
+        const target = targetTime();
+        if (Math.abs(video.currentTime - target) <= 3) {
+          seekDone = true;
+          cleanupSeek();
+          return;
+        }
+        if (attempts >= 6) {
+          cleanupSeek();
+          return;
+        }
+        attempts += 1;
+        try {
+          video.currentTime = target;
+        } catch (_) {}
+      };
+
+      const onSeeked = () => {
+        if (seq !== state.tuneSeq) return;
+        const target = targetTime();
+        if (Math.abs(video.currentTime - target) <= 3) {
+          seekDone = true;
+          cleanupSeek();
+        }
+      };
+
       const onLoaded = () => {
         video.removeEventListener('loadedmetadata', onLoaded);
-        if (offsetSeconds > 0 && Number.isFinite(video.duration)) {
-          video.currentTime = Math.min(offsetSeconds, Math.max(0, video.duration - 1));
-        } else if (offsetSeconds > 0) {
-          video.currentTime = offsetSeconds;
+        if (seq !== state.tuneSeq) {
+          cleanupSeek();
+          if (!settled) { settled = true; resolve(); }
+          return;
         }
-        attemptPlay().finally(resolve);
+        trySeek();
+        attemptPlay()
+          .then(() => { trySeek(); })
+          .finally(() => {
+            if (!settled) { settled = true; resolve(); }
+          });
       };
+
       video.addEventListener('loadedmetadata', onLoaded);
+      if (!seekDone) {
+        video.addEventListener('loadeddata', trySeek);
+        video.addEventListener('canplay', trySeek);
+        video.addEventListener('playing', trySeek);
+        video.addEventListener('seeked', onSeeked);
+      }
       video.src = url;
     });
   }

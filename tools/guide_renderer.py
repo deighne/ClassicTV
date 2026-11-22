@@ -54,6 +54,7 @@ SCROLL_PX_PER_FRAME = 1.2  # 36 px/s -> ~48.8s per 20-channel loop
 CHICAGO_TZ = ZoneInfo("America/Chicago")
 
 CHUNK_FILE_RE = re.compile(r"^guide-(\d+)\.mp4$", re.IGNORECASE)
+SIG_FILE_RE = re.compile(r"^guide-(\d+)\.sig$", re.IGNORECASE)
 
 
 # ---------------------------------------------------------------------------
@@ -752,17 +753,56 @@ def prune_old_chunks(cache_dir: Path, now_unix: int, grace_seconds: int = CHUNK_
     removed = 0
     cutoff_start = now_unix - CHUNK_SECONDS - grace_seconds
     for f in cache_dir.iterdir():
-        m = CHUNK_FILE_RE.match(f.name)
+        m = CHUNK_FILE_RE.match(f.name) or SIG_FILE_RE.match(f.name)
         if not m:
             continue
         ts = int(m.group(1))
         if ts < cutoff_start:
             try:
                 f.unlink()
-                removed += 1
-                logger.info("Pruned expired guide chunk: %s", f.name)
+                if CHUNK_FILE_RE.match(f.name):
+                    removed += 1
+                    logger.info("Pruned expired guide chunk: %s", f.name)
             except Exception as exc:
                 logger.warning("Failed to prune %s: %s", f.name, exc)
+    return removed
+
+
+def compute_schedule_signature(
+    client: JellyfinGuideDataClient,
+    channels: list[dict],
+    chunk_start: int,
+) -> str:
+    """Hash non-mirror channel slots at `chunk_start` to detect schedule drift."""
+    rows = []
+    for c in sorted(channels, key=lambda ch: (ch.get("Number") or 9999, ch.get("Id") or "")):
+        if c.get("Mirror"):
+            continue
+        cid = c.get("Id") or ""
+        slot = client.get_slot(cid, chunk_start)
+        rows.append([
+            cid,
+            c.get("Number"),
+            c.get("Name"),
+            slot.get("JellyfinItemId") or None,
+            int(round(slot.get("StartOffset") or 0)),
+        ])
+    return hashlib.sha256(json.dumps(rows, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def invalidate_cached_chunks(cache_dir: Path) -> int:
+    """Delete all cached guide-*.mp4 and guide-*.sig files in `cache_dir`."""
+    if not cache_dir.exists():
+        return 0
+    removed = 0
+    for f in cache_dir.iterdir():
+        if f.is_file() and (CHUNK_FILE_RE.match(f.name) or SIG_FILE_RE.match(f.name)):
+            try:
+                f.unlink()
+                if CHUNK_FILE_RE.match(f.name):
+                    removed += 1
+            except Exception as exc:
+                logger.warning("Failed to invalidate %s: %s", f.name, exc)
     return removed
 
 
@@ -775,11 +815,12 @@ def maintain_rolling_buffer(
 ) -> None:
     num_chunks = max(1, int(round((horizon_hours * 3600) / CHUNK_SECONDS)))
 
-    # Invalidate pre-rendered chunks if the enabled channel roster changed.
+    # Invalidate pre-rendered chunks if the enabled channel roster or active schedule changed.
     try:
+        channels = client.get_channels()
         roster = [
             (c.get("Id"), c.get("Number"), c.get("Name"))
-            for c in client.get_channels()
+            for c in channels
         ]
         roster_hash = hashlib.sha256(
             json.dumps(roster, sort_keys=True).encode("utf-8")
@@ -787,21 +828,34 @@ def maintain_rolling_buffer(
         hash_file = cache_dir / ".channels_hash"
         prev_hash = hash_file.read_text(encoding="utf-8").strip() if hash_file.exists() else None
         if prev_hash is not None and prev_hash != roster_hash:
-            removed = 0
-            for f in cache_dir.iterdir():
-                if f.is_file() and CHUNK_FILE_RE.match(f.name):
-                    f.unlink()
-                    removed += 1
+            removed = invalidate_cached_chunks(cache_dir)
             logger.info(
                 "Channel roster changed (%s -> %s); invalidated %d cached guide chunks.",
                 prev_hash[:8],
                 roster_hash[:8],
                 removed,
             )
+        else:
+            now_unix = int(time.time())
+            current_chunk = (now_unix // CHUNK_SECONDS) * CHUNK_SECONDS
+            active_mp4 = cache_dir / f"guide-{current_chunk}.mp4"
+            active_sig = cache_dir / f"guide-{current_chunk}.sig"
+            if active_mp4.exists() and active_sig.exists():
+                live_sig = compute_schedule_signature(client, channels, current_chunk)
+                prev_sig = active_sig.read_text(encoding="utf-8").strip()
+                if prev_sig != live_sig:
+                    removed = invalidate_cached_chunks(cache_dir)
+                    logger.info(
+                        "Schedule drift detected for %s (%s -> %s); invalidated %d cached guide chunks.",
+                        active_mp4.name,
+                        prev_sig[:8],
+                        live_sig[:8],
+                        removed,
+                    )
         hash_file.parent.mkdir(parents=True, exist_ok=True)
         hash_file.write_text(roster_hash, encoding="utf-8")
     except Exception as exc:
-        logger.warning("Channel roster hash check failed: %s", exc)
+        logger.warning("Channel/schedule hash check failed: %s", exc)
 
     while True:
         now_unix = int(time.time())
@@ -846,6 +900,14 @@ def maintain_rolling_buffer(
             duration_sec=CHUNK_SECONDS,
             ffmpeg_bin=ffmpeg_bin,
         )
+        try:
+            sig_path = cache_dir / f"guide-{target_chunk}.sig"
+            sig_path.write_text(
+                compute_schedule_signature(client, client.get_channels(), target_chunk),
+                encoding="utf-8",
+            )
+        except Exception as exc:
+            logger.warning("Failed to write schedule signature for %s: %s", out_path.name, exc)
 
 
 def main() -> int:

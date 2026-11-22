@@ -519,20 +519,80 @@
 
   function playUrl(url, offsetSeconds) {
     return new Promise((resolve) => {
+      const seq = state.tuneSeq;
+      let settled = false;
+      let seekDone = !(offsetSeconds > 0);
+      let attempts = 0;
+
+      const targetTime = () => {
+        if (!(offsetSeconds > 0)) return 0;
+        if (Number.isFinite(video.duration) && video.duration > 1) {
+          return Math.min(offsetSeconds, Math.max(0, video.duration - 1));
+        }
+        return offsetSeconds;
+      };
+
+      const trySeek = () => {
+        if (seq !== state.tuneSeq || seekDone) return;
+        const target = targetTime();
+        if (Math.abs(video.currentTime - target) <= 3) {
+          seekDone = true;
+          cleanupSeek();
+          return;
+        }
+        if (attempts >= 6) {
+          cleanupSeek();
+          return;
+        }
+        attempts += 1;
+        try {
+          video.currentTime = target;
+        } catch (_) {}
+      };
+
+      const onSeeked = () => {
+        if (seq !== state.tuneSeq) return;
+        const target = targetTime();
+        if (Math.abs(video.currentTime - target) <= 3) {
+          seekDone = true;
+          cleanupSeek();
+        }
+      };
+
+      const cleanupSeek = () => {
+        video.removeEventListener('loadeddata', trySeek);
+        video.removeEventListener('canplay', trySeek);
+        video.removeEventListener('playing', trySeek);
+        video.removeEventListener('seeked', onSeeked);
+      };
+
       const onLoaded = () => {
         video.removeEventListener('loadedmetadata', onLoaded);
         if (state.loadedMetadataHandler === onLoaded) {
           state.loadedMetadataHandler = null;
         }
-        if (offsetSeconds > 0 && Number.isFinite(video.duration)) {
-          video.currentTime = Math.min(offsetSeconds, Math.max(0, video.duration - 1));
-        } else if (offsetSeconds > 0) {
-          video.currentTime = offsetSeconds;
+        if (seq !== state.tuneSeq) {
+          cleanupSeek();
+          if (!settled) { settled = true; resolve(); }
+          return;
         }
-        video.play().catch((err) => console.error('ClassicTV Tizen play error:', err)).finally(resolve);
+        trySeek();
+        video.play()
+          .then(() => { trySeek(); })
+          .catch((err) => console.error('ClassicTV Tizen play error:', err))
+          .finally(() => {
+            if (!settled) { settled = true; resolve(); }
+          });
       };
+
       state.loadedMetadataHandler = onLoaded;
       video.addEventListener('loadedmetadata', onLoaded);
+      if (!seekDone) {
+        video.addEventListener('loadeddata', trySeek);
+        video.addEventListener('canplay', trySeek);
+        video.addEventListener('playing', trySeek);
+        video.addEventListener('seeked', onSeeked);
+      }
       video.src = url;
     });
   }
