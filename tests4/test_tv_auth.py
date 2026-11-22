@@ -54,10 +54,44 @@ def auth_env():
                 self.end_headers()
                 self.wfile.write(raw)
                 return
+            if self.path == "/QuickConnect/Initiate":
+                raw = json.dumps({"Secret": "sec-1", "Code": "654321"}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+                return
+            if self.path == "/Users/AuthenticateWithQuickConnect":
+                length = int(self.headers.get("Content-Length", "0") or 0)
+                body = json.loads(self.rfile.read(length).decode("utf-8"))
+                if body.get("Secret") == "sec-user":
+                    resp = {"User": {"Id": "u-rachel", "Name": "rachel", "Policy": {"IsAdministrator": False}}}
+                elif body.get("Secret") == "sec-admin":
+                    resp = {"User": {"Id": "u-admin", "Name": "admin", "Policy": {"IsAdministrator": True}}}
+                else:
+                    self.send_response(401)
+                    self.end_headers()
+                    return
+                raw = json.dumps(resp).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+                return
             self.send_response(404)
             self.end_headers()
 
         def do_GET(self):
+            if self.path.startswith("/QuickConnect/Connect"):
+                raw = json.dumps({"Authenticated": True}).encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+                return
             if self.path == "/Users/Me":
                 auth = self.headers.get("Authorization", "")
                 if "valid-token" in auth:
@@ -187,3 +221,44 @@ def test_jellyfin_bearer_token_check_user(auth_env):
         headers={"Authorization": 'MediaBrowser Client="Test", Token="bad-token"'},
     )
     assert status == 401
+
+
+def test_quick_connect_proxy_and_user_cookie(auth_env):
+    base, opener = auth_env
+    # Login page embeds Quick Connect UI + helper script
+    status, _, body = _request(opener, f"{base}/auth/login?mode=user&next=/watch")
+    assert status == 200
+    assert "auth-qc-btn" in body and "/auth/jellyfin_login.js" in body
+
+    status, _, js_body = _request(opener, f"{base}/auth/jellyfin_login.js")
+    assert status == 200 and "ClassicTVLogin" in js_body
+
+    status, _, init_body = _request(
+        opener, f"{base}/auth/quick-connect/user/QuickConnect/Initiate", method="POST", data=b""
+    )
+    assert status == 200 and json.loads(init_body)["Code"] == "654321"
+
+    status, _, chk_body = _request(
+        opener, f"{base}/auth/quick-connect/user/QuickConnect/Connect?secret=sec-1"
+    )
+    assert status == 200 and json.loads(chk_body)["Authenticated"] is True
+
+    # Non-admin rejected in admin mode, accepted in user mode
+    status, _, _ = _request(
+        opener,
+        f"{base}/auth/quick-connect/admin/Users/AuthenticateWithQuickConnect",
+        method="POST",
+        data=json.dumps({"Secret": "sec-user"}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 403
+
+    status, hdrs, _ = _request(
+        opener,
+        f"{base}/auth/quick-connect/user/Users/AuthenticateWithQuickConnect",
+        method="POST",
+        data=json.dumps({"Secret": "sec-user"}).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    assert status == 200
+    assert f"{tv_auth.USER_COOKIE_NAME}=" in hdrs.get("Set-Cookie", "")

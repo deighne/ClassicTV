@@ -119,12 +119,8 @@
   })();
 
   function defaultServerUrl() {
+    if (window.ClassicTVLogin) return window.ClassicTVLogin.getJellyfinBase();
     const cfg = window.CLASSICTV_CONFIG || {};
-    const lanHosts = cfg.lanHosts || ['localhost', '127.0.0.1'];
-    const h = window.location.hostname;
-    if (lanHosts.includes(h)) {
-      return `http://${h}:8096`;
-    }
     return (cfg.jellyfinUrl || 'https://jellyfin.example.com').replace(/\/+$/, '');
   }
 
@@ -891,18 +887,7 @@
     const password = passwordInput.value;
 
     try {
-      const res = await fetch(`${serverUrl}/Users/AuthenticateByName`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: authHeader(''),
-        },
-        body: JSON.stringify({ Username: username, Pw: password }),
-      });
-      if (!res.ok) {
-        throw new Error(res.status === 401 ? 'Invalid username or password.' : `Server returned HTTP ${res.status}`);
-      }
-      const data = await res.json();
+      const data = await window.ClassicTVLogin.authenticateByName(serverUrl, authHeader(''), username, password);
       saveAuth({
         serverUrl,
         accessToken: data.AccessToken,
@@ -918,97 +903,31 @@
     }
   });
 
-  function stopQuickConnect() {
-    if (state.qcTimer) {
-      clearInterval(state.qcTimer);
-      state.qcTimer = null;
-    }
-    state.qcSecret = null;
-    qcBox.classList.add('hidden');
-    qcCodeEl.textContent = '------';
-    qcBtn.textContent = 'Sign In with Quick Connect';
-  }
-
-  function copyQcCode() {
-    const code = (qcCodeEl.textContent || '').trim();
-    if (!code || code === '------') return;
-    if (window.navigator && window.navigator.clipboard && window.navigator.clipboard.writeText) {
-      window.navigator.clipboard.writeText(code).catch(() => {});
-    }
-    qcLabelEl.textContent = 'COPIED TO CLIPBOARD!';
-    setTimeout(() => {
-      if (state.qcSecret) {
-        qcLabelEl.textContent = 'ENTER CODE IN JELLYFIN → QUICK CONNECT (CLICK TO COPY)';
-      }
-    }, 1500);
-  }
-
-  qcBox.addEventListener('click', copyQcCode);
-  qcBox.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      copyQcCode();
-    }
-  });
-
-  qcBtn.addEventListener('click', async () => {
-    if (state.qcTimer) {
-      stopQuickConnect();
-      return;
-    }
-    loginError.textContent = '';
-    const serverUrl = (serverInput.value || defaultServerUrl()).trim().replace(/\/+$/, '');
-    try {
-      const res = await fetch(`${serverUrl}/QuickConnect/Initiate`, {
-        method: 'POST',
-        headers: { Authorization: authHeader('') },
+  const qcController = window.ClassicTVLogin.bindQuickConnect({
+    getServerUrl: () => serverInput.value || defaultServerUrl(),
+    getAuthHeader: () => authHeader(''),
+    qcBtn,
+    qcBox,
+    qcCodeEl,
+    qcHintEl: qcLabelEl,
+    errEl: loginError,
+    idleButtonText: 'Sign In with Quick Connect',
+    idleHintText: 'ENTER CODE IN JELLYFIN → QUICK CONNECT (CLICK TO COPY)',
+    onSuccess: (data, serverUrl) => {
+      saveAuth({
+        serverUrl,
+        accessToken: data.AccessToken,
+        userId: data.User && data.User.Id,
+        username: data.User && data.User.Name,
+        deviceId: getDeviceId(),
       });
-      if (!res.ok) throw new Error(`Quick Connect unavailable (HTTP ${res.status})`);
-      const init = await res.json();
-      state.qcSecret = init.Secret;
-      qcCodeEl.textContent = init.Code || '------';
-      qcBox.classList.remove('hidden');
-      qcBtn.textContent = 'Cancel Quick Connect';
-
-      state.qcTimer = setInterval(async () => {
-        if (!state.qcSecret) return;
-        try {
-          const checkRes = await fetch(`${serverUrl}/QuickConnect/Connect?secret=${encodeURIComponent(state.qcSecret)}`, {
-            headers: { Authorization: authHeader('') },
-          });
-          if (!checkRes.ok) return;
-          const check = await checkRes.json();
-          if (!check.Authenticated) return;
-
-          const authRes = await fetch(`${serverUrl}/Users/AuthenticateWithQuickConnect`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: authHeader(''),
-            },
-            body: JSON.stringify({ Secret: state.qcSecret }),
-          });
-          if (!authRes.ok) throw new Error(`Quick Connect auth HTTP ${authRes.status}`);
-          const data = await authRes.json();
-          stopQuickConnect();
-          saveAuth({
-            serverUrl,
-            accessToken: data.AccessToken,
-            userId: data.User && data.User.Id,
-            username: data.User && data.User.Name,
-            deviceId: getDeviceId(),
-          });
-          startSession();
-        } catch (err) {
-          stopQuickConnect();
-          loginError.textContent = err.message || 'Quick Connect failed.';
-        }
-      }, 2000);
-    } catch (err) {
-      stopQuickConnect();
-      loginError.textContent = err.message || 'Quick Connect failed.';
-    }
+      startSession();
+    },
   });
+
+  function stopQuickConnect() {
+    qcController.stop();
+  }
 
   // Boot
   const stored = loadStoredAuth();

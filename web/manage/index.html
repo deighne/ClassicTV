@@ -417,6 +417,7 @@
   </div>
 
   <script src="/config.js"></script>
+  <script src="/shared/jellyfin_login.js"></script>
   <script type="module">
     const AUTH_KEY = 'classictv_web_auth';
     const CLIENT_HEADER = 'MediaBrowser Client="ClassicTV Manage", Device="Browser", DeviceId="classictv-manage-web", Version="4.0"';
@@ -433,18 +434,10 @@
     const signoutBtn = document.getElementById('manage-signout');
     const pageEl     = document.getElementById('ClassicTVConfigPage');
 
-    let qcTimer = null;
-    let qcSecret = '';
     let controllerLoaded = false;
 
     function getJellyfinBase() {
-      const cfg = window.CLASSICTV_CONFIG || {};
-      const lanHosts = cfg.lanHosts || ['localhost', '127.0.0.1'];
-      const h = window.location.hostname;
-      if (lanHosts.includes(h)) {
-        return `http://${h}:8096`;
-      }
-      return (cfg.jellyfinUrl || 'https://jellyfin.example.com').replace(/\/+$/, '');
+      return window.ClassicTVLogin ? window.ClassicTVLogin.getJellyfinBase() : 'https://jellyfin.example.com';
     }
 
     function readAuth() {
@@ -460,11 +453,6 @@
 
     function saveAuth(auth) {
       localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-    }
-
-    function stopQc() {
-      if (qcTimer) { clearInterval(qcTimer); qcTimer = null; }
-      qcSecret = '';
     }
 
     async function bootManage(auth) {
@@ -507,16 +495,7 @@
       errEl.textContent = '';
       const serverUrl = getJellyfinBase();
       try {
-        const res = await fetch(`${serverUrl}/Users/AuthenticateByName`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': CLIENT_HEADER },
-          body: JSON.stringify({ Username: userInput.value.trim(), Pw: passInput.value })
-        });
-        if (!res.ok) {
-          errEl.textContent = res.status === 401 ? 'Invalid username or password.' : `Sign-in failed (HTTP ${res.status}).`;
-          return;
-        }
-        const data = await res.json();
+        const data = await window.ClassicTVLogin.authenticateByName(serverUrl, CLIENT_HEADER, userInput.value.trim(), passInput.value);
         const auth = { serverUrl, token: data.AccessToken, userId: data.User?.Id || '', userName: data.User?.Name || '' };
         saveAuth(auth);
         await bootManage(auth);
@@ -525,58 +504,27 @@
       }
     });
 
-    qcBox.addEventListener('click', async () => {
-      const code = qcCodeEl.textContent.trim();
-      if (!code || code === '------') return;
-      try {
-        await navigator.clipboard.writeText(code);
-        qcHintEl.textContent = 'Copied! Approve in Jellyfin → Quick Connect';
-      } catch (_) {}
+    const qcController = window.ClassicTVLogin.bindQuickConnect({
+      getServerUrl: getJellyfinBase,
+      getAuthHeader: () => CLIENT_HEADER,
+      qcBtn,
+      qcBox,
+      qcCodeEl,
+      qcHintEl,
+      errEl,
+      idleButtonText: 'Use Quick Connect',
+      idleHintText: 'Approve in Jellyfin → Quick Connect',
+      pollMs: 2500,
+      onSuccess: async (authData, serverUrl) => {
+        const auth = { serverUrl, token: authData.AccessToken, userId: authData.User?.Id || '', userName: authData.User?.Name || '' };
+        saveAuth(auth);
+        await bootManage(auth);
+      },
     });
 
-    qcBtn.addEventListener('click', async () => {
-      stopQc();
-      errEl.textContent = '';
-      const serverUrl = getJellyfinBase();
-      qcBtn.disabled = true;
-      try {
-        const res = await fetch(`${serverUrl}/QuickConnect/Initiate`, {
-          method: 'POST',
-          headers: { 'Authorization': CLIENT_HEADER }
-        });
-        if (!res.ok) throw new Error(`Quick Connect unavailable (HTTP ${res.status})`);
-        const data = await res.json();
-        qcSecret = data.Secret;
-        qcCodeEl.textContent = data.Code;
-        qcBox.classList.remove('hidden');
-
-        qcTimer = setInterval(async () => {
-          try {
-            const cRes = await fetch(`${serverUrl}/QuickConnect/Connect?secret=${encodeURIComponent(qcSecret)}`, {
-              headers: { 'Authorization': CLIENT_HEADER }
-            });
-            if (!cRes.ok) return;
-            const cData = await cRes.json();
-            if (!cData.Authenticated) return;
-            const aRes = await fetch(`${serverUrl}/Users/AuthenticateWithQuickConnect`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': CLIENT_HEADER },
-              body: JSON.stringify({ Secret: qcSecret })
-            });
-            if (!aRes.ok) return;
-            const authData = await aRes.json();
-            stopQc();
-            const auth = { serverUrl, token: authData.AccessToken, userId: authData.User?.Id || '', userName: authData.User?.Name || '' };
-            saveAuth(auth);
-            await bootManage(auth);
-          } catch (_) {}
-        }, 2500);
-      } catch (err) {
-        errEl.textContent = err.message || 'Quick Connect failed.';
-      } finally {
-        qcBtn.disabled = false;
-      }
-    });
+    function stopQc() {
+      qcController.stop();
+    }
 
     signoutBtn.addEventListener('click', () => {
       stopQc();

@@ -124,14 +124,44 @@ LOGIN_HTML = """<!DOCTYPE html>
       font-size: 0.85rem;
       min-height: 1.1em;
     }
+    .secondary-btn {
+      margin-top: 0.65rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .secondary-btn:hover { background: rgba(255, 255, 255, 0.14); }
+    .qc-box {
+      margin-top: 0.85rem;
+      padding: 0.85rem;
+      border: 1px dashed rgba(70, 255, 122, 0.45);
+      border-radius: 8px;
+      background: rgba(70, 255, 122, 0.06);
+      text-align: center;
+      cursor: pointer;
+    }
+    .qc-box.hidden { display: none; }
+    .qc-code {
+      font-family: "Courier New", Courier, monospace;
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: var(--phosphor);
+    }
+    .qc-hint {
+      margin-top: 0.3rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
   </style>
 </head>
 <body>
   <form class="card" method="POST" action="/auth/login">
     <h1>CLASSIC TV</h1>
     <p>__SUBTITLE__</p>
-    <input type="hidden" name="next" value="__NEXT_URL__">
-    <input type="hidden" name="mode" value="__MODE__">
+    <input type="hidden" id="auth-next" name="next" value="__NEXT_URL__">
+    <input type="hidden" id="auth-mode" name="mode" value="__MODE__">
     <div class="field">
       <label for="username">Username</label>
       <input id="username" name="username" type="text" required autocomplete="username" autofocus>
@@ -141,8 +171,36 @@ LOGIN_HTML = """<!DOCTYPE html>
       <input id="password" name="password" type="password" autocomplete="current-password">
     </div>
     <button type="submit">Sign In</button>
-    <div class="error">__ERROR_MSG__</div>
+    <button id="auth-qc-btn" type="button" class="secondary-btn">Sign In with Quick Connect</button>
+    <div id="auth-qc-box" class="qc-box hidden" tabindex="0" role="button" aria-label="Quick Connect Code">
+      <div id="auth-qc-code" class="qc-code">------</div>
+      <div id="auth-qc-hint" class="qc-hint">ENTER CODE IN JELLYFIN → QUICK CONNECT (CLICK TO COPY)</div>
+    </div>
+    <div id="auth-error" class="error">__ERROR_MSG__</div>
   </form>
+  <script src="/auth/jellyfin_login.js"></script>
+  <script>
+    (() => {
+      if (!window.ClassicTVLogin) return;
+      const nextUrl = document.getElementById('auth-next').value || '/';
+      const mode = document.getElementById('auth-mode').value || 'admin';
+      const errEl = document.getElementById('auth-error');
+      window.ClassicTVLogin.bindQuickConnect({
+        getServerUrl: () => '/auth/quick-connect/' + encodeURIComponent(mode),
+        getAuthHeader: () => 'MediaBrowser Client="ClassicTV Auth", Device="Web", DeviceId="ctv-auth-gate", Version="1.0.0"',
+        qcBtn: document.getElementById('auth-qc-btn'),
+        qcBox: document.getElementById('auth-qc-box'),
+        qcCodeEl: document.getElementById('auth-qc-code'),
+        qcHintEl: document.getElementById('auth-qc-hint'),
+        errEl,
+        idleButtonText: 'Sign In with Quick Connect',
+        idleHintText: 'ENTER CODE IN JELLYFIN → QUICK CONNECT (CLICK TO COPY)',
+        onSuccess: () => {
+          window.location.href = nextUrl;
+        },
+      });
+    })();
+  </script>
 </body>
 </html>
 """
@@ -193,6 +251,23 @@ def safe_next_url(raw: str | None) -> str:
     return raw
 
 
+def _user_result_from_auth(
+    data: dict,
+    fallback_username: str,
+    require_admin: bool,
+) -> tuple[bool, dict | str]:
+    user = data.get("User") or {}
+    policy = user.get("Policy") or {}
+    is_admin = bool(policy.get("IsAdministrator"))
+    if require_admin and not is_admin:
+        return False, "Administrator privileges required."
+    return True, {
+        "userId": user.get("Id", ""),
+        "username": user.get("Name", fallback_username),
+        "isAdmin": is_admin,
+    }
+
+
 def authenticate_jellyfin_user(
     jellyfin_url: str,
     username: str,
@@ -220,16 +295,31 @@ def authenticate_jellyfin_user(
     except Exception as exc:
         return False, f"Unable to reach Jellyfin: {exc}"
 
-    user = data.get("User") or {}
-    policy = user.get("Policy") or {}
-    is_admin = bool(policy.get("IsAdministrator"))
-    if require_admin and not is_admin:
-        return False, "Administrator privileges required."
-    return True, {
-        "userId": user.get("Id", ""),
-        "username": user.get("Name", username),
-        "isAdmin": is_admin,
+    return _user_result_from_auth(data, username, require_admin)
+
+
+def proxy_jellyfin_json(
+    jellyfin_url: str,
+    path_and_query: str,
+    method: str = "GET",
+    body: bytes | None = None,
+    auth_header: str = "",
+) -> tuple[int, bytes]:
+    url = f"{jellyfin_url.rstrip('/')}{path_and_query}"
+    hdrs = {
+        "Authorization": auth_header
+        or 'MediaBrowser Client="ClassicTV Auth", Device="Web", DeviceId="ctv-auth-gate", Version="1.0.0"',
     }
+    if body is not None:
+        hdrs["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=body, method=method, headers=hdrs)
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            return resp.status, resp.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read()
+    except Exception as exc:
+        return 502, json.dumps({"error": str(exc)}).encode("utf-8")
 
 
 def authenticate_jellyfin_admin(jellyfin_url: str, username: str, password: str) -> tuple[bool, dict | str]:
@@ -329,6 +419,35 @@ class AuthHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def _send_json(self, status: int, raw: bytes, set_cookies: list[str] | None = None) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        for c in set_cookies or []:
+            self.send_header("Set-Cookie", c)
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def _build_session_cookies(self, result: dict) -> list[str]:
+        payload = {
+            "userId": result["userId"],
+            "username": result["username"],
+            "exp": int(time.time()) + SESSION_TTL_SECONDS,
+        }
+        token = sign_token(payload, self.secret)
+        secure = "; Secure" if self._is_https() else ""
+        cookies = [
+            f"{USER_COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax; "
+            f"Max-Age={SESSION_TTL_SECONDS}{secure}"
+        ]
+        if result.get("isAdmin"):
+            cookies.append(
+                f"{COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax; "
+                f"Max-Age={SESSION_TTL_SECONDS}{secure}"
+            )
+        return cookies
+
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
@@ -400,6 +519,29 @@ class AuthHandler(BaseHTTPRequestHandler):
             self._send_html(200, self._render_login(next_url, mode))
             return
 
+        if path == "/auth/jellyfin_login.js":
+            js_path = Path(__file__).resolve().parent.parent / "web" / "shared" / "jellyfin_login.js"
+            raw = js_path.read_bytes() if js_path.exists() else b""
+            self.send_response(200 if raw else 404)
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(raw)))
+            self.end_headers()
+            if raw:
+                self.wfile.write(raw)
+            return
+
+        if path.startswith("/auth/quick-connect/") and path.endswith("/QuickConnect/Connect"):
+            secret_q = (qs.get("secret") or [""])[0]
+            status, raw = proxy_jellyfin_json(
+                self.jellyfin_url,
+                f"/QuickConnect/Connect?secret={urllib.parse.quote(secret_q)}",
+                method="GET",
+                auth_header=self.headers.get("Authorization", ""),
+            )
+            self._send_json(status, raw)
+            return
+
         if path == "/auth/logout":
             secure = "; Secure" if self._is_https() else ""
             clear_cookies = [
@@ -415,6 +557,52 @@ class AuthHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path.startswith("/auth/quick-connect/"):
+            parts = [p for p in parsed.path.split("/") if p]
+            # /auth/quick-connect/<mode>/QuickConnect/Initiate or .../Users/AuthenticateWithQuickConnect
+            mode = parts[2] if len(parts) >= 3 and parts[2] == "user" else "admin"
+            tail = "/" + "/".join(parts[3:]) if len(parts) >= 4 else ""
+            length = int(self.headers.get("Content-Length", "0") or 0)
+            raw_body = self.rfile.read(min(length, 16384)) if length > 0 else None
+
+            if tail == "/QuickConnect/Initiate":
+                status, raw = proxy_jellyfin_json(
+                    self.jellyfin_url,
+                    "/QuickConnect/Initiate",
+                    method="POST",
+                    auth_header=self.headers.get("Authorization", ""),
+                )
+                self._send_json(status, raw)
+                return
+
+            if tail == "/Users/AuthenticateWithQuickConnect":
+                status, raw = proxy_jellyfin_json(
+                    self.jellyfin_url,
+                    "/Users/AuthenticateWithQuickConnect",
+                    method="POST",
+                    body=raw_body or b"{}",
+                    auth_header=self.headers.get("Authorization", ""),
+                )
+                if status != 200:
+                    self._send_json(status, raw)
+                    return
+                try:
+                    data = json.loads(raw.decode("utf-8"))
+                except Exception:
+                    self._send_json(502, b'{"error":"Invalid Jellyfin response"}')
+                    return
+                ok, result = _user_result_from_auth(data, "", require_admin=(mode != "user"))
+                if not ok:
+                    self._send_json(403, json.dumps({"error": str(result)}).encode("utf-8"))
+                    return
+                self._send_json(200, raw, set_cookies=self._build_session_cookies(result))
+                return
+
+            self.send_response(404)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+
         if parsed.path != "/auth/login":
             self.send_response(404)
             self.send_header("Content-Length", "0")
@@ -440,23 +628,7 @@ class AuthHandler(BaseHTTPRequestHandler):
             self._send_html(status, self._render_login(next_url, mode, str(result)))
             return
 
-        payload = {
-            "userId": result["userId"],
-            "username": result["username"],
-            "exp": int(time.time()) + SESSION_TTL_SECONDS,
-        }
-        token = sign_token(payload, self.secret)
-        secure = "; Secure" if self._is_https() else ""
-        cookies = [
-            f"{USER_COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax; "
-            f"Max-Age={SESSION_TTL_SECONDS}{secure}"
-        ]
-        if result.get("isAdmin"):
-            cookies.append(
-                f"{COOKIE_NAME}={token}; Path=/; HttpOnly; SameSite=Lax; "
-                f"Max-Age={SESSION_TTL_SECONDS}{secure}"
-            )
-        self._redirect(next_url, status=303, set_cookies=cookies)
+        self._redirect(next_url, status=303, set_cookies=self._build_session_cookies(result))
 
 
 def main() -> int:
