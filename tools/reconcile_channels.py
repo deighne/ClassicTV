@@ -187,7 +187,7 @@ def main() -> int:
         return 0
 
     payload = json.dumps(updated).encode("utf-8")
-    with _request(f"{base}/ClassicTV/manage/channels", key, data=payload, method="PUT") as r:
+    with _request(f"{base}/ClassicTV/manage/channels", key, data=payload) as r:
         print(f"\nSaved updated config (HTTP {r.status}).")
     return 0
 
